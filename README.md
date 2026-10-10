@@ -66,12 +66,21 @@ Note that the 60% layout hides the whole navigation cluster, which includes the 
 - **Editing**: Backspace steps the cursor back and resets the character state so typos can be corrected.
 - Practice mode runs alongside background diagnostics: key presses still light the chassis, still play audio, and still feed the speed and heatmap trackers.
 
+### Key Rebinding & Remapping Simulator
+
+- **Interactive Remap Mode**: A toolbar toggle activates key rebinding mode across the keyboard.
+- **Click-to-Bind modal**: Clicking any key opens an interactive capture modal (`#remapModalBackdrop`) that listens for your next physical keypress, or lets you choose from quick-bind presets (`Esc`, `Ctrl Left`, `Backspace`, `Enter`, `Tab`, `CapsLock`, `Space`).
+- **Visual neon violet styling**: Remapped keys glow in dark violet with corner target alias badges (`.key-remap-badge`, e.g. `➔ Esc`).
+- **Simulated keystroke routing**: During normal testing, pressing the physical key routes transparently through `customRemapMap`, triggering the target keycap, audio synthesis, NKRO rollover, and event logs.
+- **Export & Management**: Active custom mappings are included in the JSON report (schema version 1.8.0), with individual "Reset to Default" and "Clear All" controls.
+
 ### Reporting
 
-- **JSON report export**: Exports the full session as a downloadable `keyboard-test-report-<timestamp>.json` file (schema version 1.7.0), including:
+- **JSON report export**: Exports the full session as a downloadable `keyboard-test-report-<timestamp>.json` file (schema version 1.8.0), including:
   - OS target, layout, and Enter variant.
   - Audio settings including sound profile, volume percentage, and pitch multiplier.
   - Practice mode state with prompt, progress, accuracy, errors, and completion flag.
+  - Custom key remapping table (`customRemaps`).
   - Debounce jitter analysis with total samples, minimum, average, standard deviation, and the six-bin distribution.
   - Summary metrics: tested key count, coverage percentage, peak rollover, chatter alerts, average hold duration, peak WPM and CPS, total events, and total actuations.
   - The full per-key actuation frequency map and the list of tested key codes.
@@ -88,20 +97,20 @@ Note that the 60% layout hides the whole navigation cluster, which includes the 
 
 ```text
 keyboard-tester/
-├── index.html       # Semantic HTML5 markup: header controls, diagnostics grid,
-│                    # toolbar, practice panel, keyboard chassis, event log
-├── style.css        # Dark theme, 3D keycap styling, glow states, layout and
-│                    # ISO variant show/hide rules, heatmap ramp, panel styling
-├── script.js        # State, Web Audio synth + analyser, oscilloscope and
-│                    # histogram renderers, event listeners, layout/variant
-│                    # switching, diagnostics, practice engine, JSON export
-├── COMMUNICATION.md # Append-only inter-agent message log and file lock table
-└── README.md        # This file
+├── index.html          # Semantic HTML5 markup: header controls, diagnostics grid,
+│                       # toolbar, practice panel, chassis, remap modal, event log
+├── style.css           # Dark mechanical theme, 3D keycaps, glow states, layout/ISO
+│                       # variant rules, heatmap ramp, violet remap styling
+├── script.js           # State, Web Audio synth + analyser, oscilloscope,
+│                       # debounce jitter histogram, key remap engine, JSON export
+├── EFFORT_TRACKER.md   # Data-backed project contribution and effort audit
+├── COMMUNICATION.md    # Multi-agent asynchronous coordination and lock table
+└── README.md           # Project architecture, features, and quickstart guide
 ```
 
 There are four source files and no partials. Layout and variant switching is implemented as CSS show/hide rules scoped to classes on the single keyboard element, not as separately authored markup, so adding a form factor means adding a class and a rule rather than a new block of HTML.
 
-A `EFFORT_TRACKER.md` is claimed in the `COMMUNICATION.md` lock table but has not been committed to the repository.
+Project contribution audits and historical metrics are documented in [`EFFORT_TRACKER.md`](EFFORT_TRACKER.md).
 
 ## Quick Start
 
