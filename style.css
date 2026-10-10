@@ -144,10 +144,59 @@ body {
   border-radius: var(--radius-sm);
 }
 
+.sound-select-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.pill-select {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.pill-select:hover, .pill-select:focus {
+  border-color: var(--accent);
+  background: var(--bg-card-subtle);
+}
+
 .pill-btn.danger-outline:hover {
   background: #450a0a;
   border-color: #ef4444;
   color: #fca5a5;
+}
+
+.layout-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-card-subtle);
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.toolbar-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+
+.layout-btn {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
 }
 
 /* Diagnostics Cards */
@@ -300,6 +349,25 @@ body {
   gap: 20px;
   width: max-content;
   margin: 0 auto;
+}
+
+/* Layout Variations */
+.keyboard.layout-tkl .keyboard-numpad {
+  display: none;
+}
+
+.keyboard.layout-75 .keyboard-numpad {
+  display: none;
+}
+.keyboard.layout-75 .keyboard-nav .f-row,
+.keyboard.layout-75 .keyboard-nav .empty-row {
+  display: none;
+}
+
+.keyboard.layout-60 .keyboard-numpad,
+.keyboard.layout-60 .keyboard-nav,
+.keyboard.layout-60 .f-row {
+  display: none;
 }
 
 .keyboard-main,

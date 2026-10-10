@@ -10,12 +10,15 @@ let maxRollover = 0;
 let eventCounter = 0;
 let soundEnabled = true;
 let currentOS = 'mac'; // 'mac' | 'win'
+let currentSoundProfile = 'blue'; // 'blue' | 'red' | 'brown'
+let currentLayout = '100'; // '100' | 'tkl' | '75' | '60'
 let chatterCount = 0;
 const lastKeyDownTimeMap = new Map();
 const holdDurations = [];
 
 // DOM Elements
 const keyboardWrapper = document.getElementById('keyboardWrapper');
+const keyboardEl = document.getElementById('keyboard');
 const keyElements = document.querySelectorAll('.key[data-code]');
 const lastKeyValueEl = document.getElementById('lastKeyValue');
 const lastKeyCodeValueEl = document.getElementById('lastKeyCodeValue');
@@ -36,6 +39,8 @@ const logCounterEl = document.getElementById('logCounter');
 
 const osMacBtn = document.getElementById('osMacBtn');
 const osWinBtn = document.getElementById('osWinBtn');
+const soundProfileSelect = document.getElementById('soundProfileSelect');
+const layoutBtns = document.querySelectorAll('.layout-btn');
 const soundToggleBtn = document.getElementById('soundToggleBtn');
 const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
@@ -49,7 +54,7 @@ keyElements.forEach(el => {
   }
 });
 
-const totalTestableKeys = keyMap.size;
+let currentTotalTestableKeys = keyMap.size;
 
 // Web Audio API Synth for Mechanical Key Click
 let audioCtx = null;
@@ -72,34 +77,75 @@ function playKeySound(isKeyDown = true) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
-    if (isKeyDown) {
-      // Crisp mechanical clack
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.exponentialRampToValueAtTime(110, now + 0.04);
-
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.05);
+    if (currentSoundProfile === 'blue') {
+      // Cherry MX Blue (Clicky: sharp high pitch crisp snap)
+      if (isKeyDown) {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(820, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.035);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(380, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.025);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.028);
+      }
+    } else if (currentSoundProfile === 'red') {
+      // Cherry MX Red (Linear: deep, muted, thocky low-frequency bottom-out)
+      if (isKeyDown) {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(190, now);
+        osc.frequency.exponentialRampToValueAtTime(55, now + 0.06);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.065);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(130, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.03);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.035);
+      }
     } else {
-      // Subtle switch release pop
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, now);
-      osc.frequency.exponentialRampToValueAtTime(80, now + 0.03);
-
-      gain.gain.setValueAtTime(0.09, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.035);
+      // Cherry MX Brown (Tactile: balanced mid-range bump)
+      if (isKeyDown) {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(460, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.045);
+        gain.gain.setValueAtTime(0.19, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.03);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.032);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.032);
+      }
     }
   } catch (err) {
     // Ignore audio initialization errors if blocked by browser policy
@@ -119,8 +165,8 @@ function formatLocation(loc) {
 // Update UI Progress
 function updateProgress() {
   const testedCount = testedKeys.size;
-  testedProgressEl.textContent = `${testedCount} / ${totalTestableKeys}`;
-  const pct = totalTestableKeys > 0 ? (testedCount / totalTestableKeys) * 100 : 0;
+  testedProgressEl.textContent = `${testedCount} / ${currentTotalTestableKeys}`;
+  const pct = currentTotalTestableKeys > 0 ? (testedCount / currentTotalTestableKeys) * 100 : 0;
   progressBarEl.style.width = `${Math.min(100, Math.round(pct))}%`;
 }
 
@@ -321,13 +367,15 @@ function exportReport() {
   const avgHold = holdDurations.length ? Math.round(holdDurations.reduce((a, b) => a + b, 0) / holdDurations.length) : 0;
   const report = {
     application: "Keyboard Tester",
-    version: "1.1.0",
+    version: "1.2.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
+    soundProfile: currentSoundProfile,
+    layout: currentLayout,
     summary: {
       testedKeysCount: testedKeys.size,
-      totalKeysAvailable: totalTestableKeys,
-      coveragePercent: totalTestableKeys > 0 ? `${Math.round((testedKeys.size / totalTestableKeys) * 100)}%` : "0%",
+      totalKeysAvailable: currentTotalTestableKeys,
+      coveragePercent: currentTotalTestableKeys > 0 ? `${Math.round((testedKeys.size / currentTotalTestableKeys) * 100)}%` : "0%",
       maxRolloverKeys: maxRollover,
       chatterBounceAlerts: chatterCount,
       averageHoldDurationMs: avgHold,
@@ -346,6 +394,48 @@ function exportReport() {
 }
 
 exportBtn.addEventListener('click', exportReport);
+
+// Layout Switching Logic
+function calculateVisibleTestableKeys() {
+  let count = 0;
+  keyMap.forEach((el) => {
+    if (el.offsetParent !== null) {
+      count++;
+    }
+  });
+  currentTotalTestableKeys = count > 0 ? count : keyMap.size;
+  updateProgress();
+}
+
+function setLayout(layout) {
+  currentLayout = layout;
+  layoutBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-layout') === layout);
+  });
+
+  keyboardEl.classList.remove('layout-tkl', 'layout-75', 'layout-60');
+  if (layout !== '100') {
+    keyboardEl.classList.add(`layout-${layout}`);
+  }
+
+  // Allow DOM reflow then recalculate
+  requestAnimationFrame(() => {
+    calculateVisibleTestableKeys();
+  });
+}
+
+layoutBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    setLayout(btn.getAttribute('data-layout'));
+  });
+});
+
+// Sound Profile Selector
+if (soundProfileSelect) {
+  soundProfileSelect.addEventListener('change', (e) => {
+    currentSoundProfile = e.target.value;
+  });
+}
 
 // OS Toggle
 function setOS(os) {
@@ -390,7 +480,7 @@ keyboardWrapper.addEventListener('click', () => {
 });
 
 // Initial Setup
-updateProgress();
+calculateVisibleTestableKeys();
 
 // Detect OS default
 if (navigator.platform && navigator.platform.toUpperCase().indexOf('MAC') >= 0) {

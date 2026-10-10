@@ -24,6 +24,13 @@
           <button id="osMacBtn" class="pill-btn active" title="Switch to macOS layout labels">macOS</button>
           <button id="osWinBtn" class="pill-btn" title="Switch to Windows layout labels">Windows</button>
         </div>
+        <div class="sound-select-wrapper">
+          <select id="soundProfileSelect" class="pill-select" title="Choose mechanical switch sound profile">
+            <option value="blue">🔵 Cherry Blue (Clicky)</option>
+            <option value="red">🔴 Cherry Red (Linear)</option>
+            <option value="brown">🟤 Cherry Brown (Tactile)</option>
+          </select>
+        </div>
         <button id="soundToggleBtn" class="pill-btn active" title="Toggle mechanical switch click audio">
           <span class="icon">🔊</span> Sound: ON
         </button>
@@ -80,10 +87,17 @@
     <!-- Toolbar / Options -->
     <div class="tester-toolbar">
       <div class="toolbar-left">
+        <div class="layout-toggle-group" id="layoutToggleGroup">
+          <span class="toolbar-label">Form Factor:</span>
+          <button class="pill-btn layout-btn active" data-layout="100">100% Full</button>
+          <button class="pill-btn layout-btn" data-layout="tkl">80% TKL</button>
+          <button class="pill-btn layout-btn" data-layout="75">75% Compact</button>
+          <button class="pill-btn layout-btn" data-layout="60">60% Minimal</button>
+        </div>
         <label class="toggle-checkbox">
           <input type="checkbox" id="preventShortcutsCheckbox" checked />
           <span class="checkmark"></span>
-          <span>Prevent browser shortcut defaults while testing (Tab, F-keys, etc.)</span>
+          <span>Prevent browser shortcuts</span>
         </label>
       </div>
       <div class="status-legend">
