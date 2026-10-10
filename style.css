@@ -601,6 +601,11 @@ body {
   box-shadow: 0 0 8px var(--key-tested-border);
 }
 
+.remapped-dot {
+  background: #a855f7;
+  box-shadow: 0 0 8px #a855f7;
+}
+
 .untouched-dot {
   background: var(--key-bg);
   border: 1px solid var(--key-border);
@@ -636,6 +641,43 @@ body {
   border-color: #10b981;
   color: #a7f3d0;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+#remapToggleBtn.active {
+  background: #3b0764;
+  border-color: #a855f7;
+  color: #f3e8ff;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.45);
+}
+
+.remap-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+}
+
+.remap-pill-clear {
+  background: transparent;
+  border: none;
+  color: #c084fc;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.remap-pill-clear:hover {
+  background: rgba(168, 85, 247, 0.3);
+  color: #ffffff;
 }
 
 /* Practice Mode Container */
@@ -1059,6 +1101,47 @@ body {
   box-shadow: var(--key-active-glow) !important;
 }
 
+/* Remapped Key State & Badge */
+.key.remapped {
+  border-color: #a855f7 !important;
+  background: linear-gradient(180deg, #1e1136 0%, #150926 100%) !important;
+  color: #f3e8ff !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4) !important;
+}
+
+.key-remap-badge {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #f5f3ff;
+  background: #7e22ce;
+  border: 1px solid rgba(192, 132, 252, 0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  line-height: 1.1;
+  z-index: 5;
+}
+
+/* When Remap Mode is toggled on, highlight keys to indicate clickability */
+.keyboard.remap-mode-active .key {
+  cursor: crosshair;
+}
+
+.keyboard.remap-mode-active .key:hover {
+  border-color: #c084fc;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+  transform: translateY(-1px);
+}
+
 /* Navigation cluster layout */
 .nav-arrows-top,
 .nav-arrows-bottom {
@@ -1142,6 +1225,208 @@ body {
   color: var(--text-dim);
   padding: 30px;
   font-style: italic;
+}
+
+/* Remap Modal Dialog */
+.remap-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 7, 18, 0.78);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.remap-modal-card {
+  background: #0f172a;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.9), 0 0 24px rgba(168, 85, 247, 0.2);
+  overflow: hidden;
+  animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.remap-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.remap-modal-header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f3e8ff;
+  margin: 0;
+}
+
+.remap-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.remap-modal-close:hover {
+  color: var(--text-main);
+  background: var(--bg-card-subtle);
+}
+
+.remap-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.remap-modal-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.remap-mapping-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #080c16;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  gap: 12px;
+}
+
+.remap-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.remap-box-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.remap-key-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  min-width: 120px;
+  text-align: center;
+}
+
+.remap-key-chip.source {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: #94a3b8;
+}
+
+.remap-key-chip.target {
+  background: #1e1136;
+  border: 1.5px solid #a855f7;
+  color: #f3e8ff;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+}
+
+.remap-key-chip.target.waiting {
+  border-style: dashed;
+  color: #c084fc;
+  animation: pulseBorder 1.5s infinite;
+}
+
+@keyframes pulseBorder {
+  0%, 100% { border-color: rgba(168, 85, 247, 0.4); }
+  50% { border-color: rgba(168, 85, 247, 1); }
+}
+
+.remap-arrow {
+  font-size: 1.4rem;
+  color: #a855f7;
+}
+
+.remap-listen-hint {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.remap-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.presets-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.preset-btn {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-btn:hover {
+  border-color: #a855f7;
+  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.remap-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: rgba(15, 23, 42, 0.6);
+  border-top: 1px solid var(--border-color);
+}
+
+.modal-footer-right {
+  display: flex;
+  gap: 10px;
 }
 
 /* Footer */

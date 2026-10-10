@@ -160,6 +160,8 @@
         </div>
         <button id="heatmapToggleBtn" class="pill-btn" title="Toggle key actuation frequency heatmap mode">🔥 Heatmap: OFF</button>
         <button id="practiceToggleBtn" class="pill-btn" title="Toggle interactive typing practice mode">🎯 Practice: OFF</button>
+        <button id="remapToggleBtn" class="pill-btn" title="Toggle custom key rebinding / remap mode">🔀 Remap: OFF</button>
+        <span class="remap-status-pill" id="remapStatusPill" style="display: none;"><span id="remapCountText">0 remapped</span><button id="clearAllRemapsBtn" class="remap-pill-clear" title="Clear all active remaps">&times;</button></span>
         <label class="toggle-checkbox">
           <input type="checkbox" id="preventShortcutsCheckbox" checked />
           <span class="checkmark"></span>
@@ -169,6 +171,7 @@
       <div class="status-legend" id="standardLegend">
         <span class="legend-item"><span class="dot active-dot"></span> Active (Pressed)</span>
         <span class="legend-item"><span class="dot tested-dot"></span> Tested (Working)</span>
+        <span class="legend-item"><span class="dot remapped-dot"></span> Remapped</span>
         <span class="legend-item"><span class="dot untouched-dot"></span> Untested</span>
       </div>
       <div class="status-legend heatmap-legend" id="heatmapLegend" style="display: none;">
@@ -442,6 +445,52 @@
         </table>
       </div>
     </section>
+
+    <!-- Key Remap Dialog Modal -->
+    <div class="remap-modal-backdrop" id="remapModalBackdrop" style="display: none;">
+      <div class="remap-modal-card" role="dialog" aria-modal="true" aria-labelledby="remapModalTitle">
+        <div class="remap-modal-header">
+          <h3 id="remapModalTitle">🔀 Remap Key Binding</h3>
+          <button type="button" class="remap-modal-close" id="remapModalCloseBtn" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="remap-modal-body">
+          <p class="remap-modal-desc">
+            Reassign physical keystrokes to simulate alternate layouts or firmware remaps in real time.
+          </p>
+          <div class="remap-mapping-row">
+            <div class="remap-box">
+              <span class="remap-box-label">Physical Key (Source)</span>
+              <div class="remap-key-chip source" id="remapSourceChip">KeyA</div>
+            </div>
+            <div class="remap-arrow">➔</div>
+            <div class="remap-box">
+              <span class="remap-box-label">Simulated Target</span>
+              <div class="remap-key-chip target waiting" id="remapTargetChip">Press any key...</div>
+            </div>
+          </div>
+          <div class="remap-listen-hint">
+            Press any physical key on your keyboard to capture target binding, or choose a preset below:
+          </div>
+          <div class="remap-presets">
+            <span class="presets-label">Common Presets:</span>
+            <button type="button" class="preset-btn" data-target="Escape">Escape</button>
+            <button type="button" class="preset-btn" data-target="ControlLeft">Ctrl (Left)</button>
+            <button type="button" class="preset-btn" data-target="Backspace">Backspace</button>
+            <button type="button" class="preset-btn" data-target="Enter">Enter</button>
+            <button type="button" class="preset-btn" data-target="Tab">Tab</button>
+            <button type="button" class="preset-btn" data-target="CapsLock">Caps Lock</button>
+            <button type="button" class="preset-btn" data-target="Space">Space</button>
+          </div>
+        </div>
+        <div class="remap-modal-footer">
+          <button type="button" class="btn btn-secondary" id="remapRemoveBtn">Reset to Default</button>
+          <div class="modal-footer-right">
+            <button type="button" class="btn btn-secondary" id="remapCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="remapApplyBtn">Apply Remap</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <footer class="app-footer">
       <p>Keyboard Tester • Standalone HTML/CSS/JS Diagnostic Suite • Ready for collaborative enhancement</p>

@@ -23,6 +23,11 @@ const holdDurations = [];
 const recentKeyPressTimes = [];
 let peakWpm = 0;
 let peakCps = 0;
+let remapMode = false;
+const customRemapMap = new Map(); // physicalCode -> simulatedCode
+let remapModalOpen = false;
+let currentRemapSource = null;
+let capturedTargetCandidate = null;
 
 // DOM Elements
 const keyboardWrapper = document.getElementById('keyboardWrapper');
@@ -81,6 +86,18 @@ const jitterCanvas = document.getElementById('jitterCanvas');
 const jitterCtx = jitterCanvas ? jitterCanvas.getContext('2d') : null;
 const jitterStdBadge = document.getElementById('jitterStdBadge');
 const jitterSummary = document.getElementById('jitterSummary');
+const remapToggleBtn = document.getElementById('remapToggleBtn');
+const remapStatusPill = document.getElementById('remapStatusPill');
+const remapCountText = document.getElementById('remapCountText');
+const clearAllRemapsBtn = document.getElementById('clearAllRemapsBtn');
+const remapModalBackdrop = document.getElementById('remapModalBackdrop');
+const remapModalCloseBtn = document.getElementById('remapModalCloseBtn');
+const remapSourceChip = document.getElementById('remapSourceChip');
+const remapTargetChip = document.getElementById('remapTargetChip');
+const remapRemoveBtn = document.getElementById('remapRemoveBtn');
+const remapCancelBtn = document.getElementById('remapCancelBtn');
+const remapApplyBtn = document.getElementById('remapApplyBtn');
+const presetBtns = document.querySelectorAll('.preset-btn');
 
 // Key code mapping cache
 const keyMap = new Map();
@@ -668,13 +685,175 @@ function togglePracticeMode() {
   }
 }
 
+// Custom Key Rebinding & Remapping Simulator
+function getFriendlyKeyName(code) {
+  if (!code) return '';
+  const map = {
+    ControlLeft: 'Ctrl',
+    ControlRight: 'RCtrl',
+    ShiftLeft: 'Shift',
+    ShiftRight: 'RShift',
+    AltLeft: 'Alt',
+    AltRight: 'RAlt',
+    MetaLeft: 'Cmd',
+    MetaRight: 'RCmd',
+    Escape: 'Esc',
+    Backspace: 'Bksp',
+    CapsLock: 'Caps',
+    Space: 'Space',
+    Enter: 'Enter',
+    Tab: 'Tab',
+    Delete: 'Del',
+    Insert: 'Ins',
+    ArrowUp: '↑',
+    ArrowDown: '↓',
+    ArrowLeft: '←',
+    ArrowRight: '→'
+  };
+  if (map[code]) return map[code];
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Numpad')) return 'N' + code.slice(6);
+  return code.slice(0, 6);
+}
+
+function updateRemapVisuals() {
+  keyElements.forEach(el => {
+    el.classList.remove('remapped');
+    const oldBadge = el.querySelector('.key-remap-badge');
+    if (oldBadge) oldBadge.remove();
+  });
+
+  customRemapMap.forEach((targetCode, sourceCode) => {
+    const el = keyMap.get(sourceCode);
+    if (el) {
+      el.classList.add('remapped');
+      const badge = document.createElement('span');
+      badge.className = 'key-remap-badge';
+      badge.textContent = `➔ ${getFriendlyKeyName(targetCode)}`;
+      badge.title = `Remapped: ${sourceCode} ➔ ${targetCode}`;
+      el.appendChild(badge);
+    }
+  });
+
+  const count = customRemapMap.size;
+  if (remapStatusPill && remapCountText) {
+    if (count > 0) {
+      remapStatusPill.style.display = 'inline-flex';
+      remapCountText.textContent = `${count} remapped`;
+    } else {
+      remapStatusPill.style.display = 'none';
+    }
+  }
+}
+
+function openRemapModal(sourceCode) {
+  currentRemapSource = sourceCode;
+  capturedTargetCandidate = customRemapMap.get(sourceCode) || null;
+  remapModalOpen = true;
+
+  if (remapSourceChip) {
+    remapSourceChip.textContent = `${sourceCode} (${getFriendlyKeyName(sourceCode)})`;
+  }
+  if (remapTargetChip) {
+    if (capturedTargetCandidate) {
+      remapTargetChip.textContent = `${capturedTargetCandidate} (${getFriendlyKeyName(capturedTargetCandidate)})`;
+      remapTargetChip.classList.remove('waiting');
+    } else {
+      remapTargetChip.textContent = 'Press any key...';
+      remapTargetChip.classList.add('waiting');
+    }
+  }
+
+  if (remapRemoveBtn) {
+    remapRemoveBtn.style.display = customRemapMap.has(sourceCode) ? 'inline-block' : 'none';
+  }
+
+  if (remapModalBackdrop) {
+    remapModalBackdrop.style.display = 'flex';
+  }
+}
+
+function closeRemapModal() {
+  remapModalOpen = false;
+  currentRemapSource = null;
+  capturedTargetCandidate = null;
+  if (remapModalBackdrop) {
+    remapModalBackdrop.style.display = 'none';
+  }
+}
+
+function setCapturedTarget(targetCode) {
+  capturedTargetCandidate = targetCode;
+  if (remapTargetChip) {
+    remapTargetChip.textContent = `${targetCode} (${getFriendlyKeyName(targetCode)})`;
+    remapTargetChip.classList.remove('waiting');
+  }
+}
+
+function applyRemap() {
+  if (currentRemapSource && capturedTargetCandidate) {
+    if (currentRemapSource === capturedTargetCandidate) {
+      customRemapMap.delete(currentRemapSource);
+    } else {
+      customRemapMap.set(currentRemapSource, capturedTargetCandidate);
+    }
+    updateRemapVisuals();
+  }
+  closeRemapModal();
+}
+
+function removeRemap() {
+  if (currentRemapSource) {
+    customRemapMap.delete(currentRemapSource);
+    updateRemapVisuals();
+  }
+  closeRemapModal();
+}
+
+function clearAllRemaps() {
+  customRemapMap.clear();
+  updateRemapVisuals();
+}
+
+function toggleRemapMode() {
+  remapMode = !remapMode;
+  if (remapMode) {
+    if (remapToggleBtn) {
+      remapToggleBtn.classList.add('active');
+      remapToggleBtn.textContent = '🔀 Remap: ON';
+    }
+    if (keyboardEl) {
+      keyboardEl.classList.add('remap-mode-active');
+    }
+  } else {
+    if (remapToggleBtn) {
+      remapToggleBtn.classList.remove('active');
+      remapToggleBtn.textContent = '🔀 Remap: OFF';
+    }
+    if (keyboardEl) {
+      keyboardEl.classList.remove('remap-mode-active');
+    }
+  }
+}
+
 // Handle Key Down
 window.addEventListener('keydown', (e) => {
+  // If remap modal is open, capture the target candidate and suppress tester input
+  if (remapModalOpen) {
+    e.preventDefault();
+    e.stopPropagation();
+    setCapturedTarget(e.code);
+    return;
+  }
+
   if (shouldPreventShortcut(e)) {
     e.preventDefault();
   }
 
-  const code = e.code;
+  const physicalCode = e.code;
+  const isRemapped = customRemapMap.has(physicalCode);
+  const code = isRemapped ? customRemapMap.get(physicalCode) : physicalCode;
   const now = performance.now();
 
   // Switch Chatter / Bounce Detection (Rapid successive keydown < 25ms on same key)
@@ -715,7 +894,11 @@ window.addEventListener('keydown', (e) => {
 
   // Update Diagnostics
   lastKeyValueEl.textContent = e.key === ' ' ? 'Space' : e.key;
-  lastKeyCodeValueEl.textContent = `event.code: ${e.code}`;
+  if (isRemapped) {
+    lastKeyCodeValueEl.textContent = `${code} (🔀 from ${physicalCode})`;
+  } else {
+    lastKeyCodeValueEl.textContent = `event.code: ${e.code}`;
+  }
   lastWhichValueEl.textContent = `${e.which || e.keyCode || '—'}`;
   keyLocationValueEl.textContent = `Location: ${formatLocation(e.location)}`;
   activeKeysCountEl.textContent = activeKeys.size;
@@ -732,13 +915,29 @@ window.addEventListener('keydown', (e) => {
   }
 
   updateProgress();
-  appendEventLog('keydown', e);
+  const logEvent = isRemapped ? {
+    key: e.key,
+    code: `${code} (🔀 ${physicalCode})`,
+    which: e.which,
+    keyCode: e.keyCode,
+    location: e.location
+  } : e;
+  appendEventLog('keydown', logEvent);
   playKeySound(true);
 });
 
 // Handle Key Up
 window.addEventListener('keyup', (e) => {
-  const code = e.code;
+  if (remapModalOpen) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
+  const physicalCode = e.code;
+  const isRemapped = customRemapMap.has(physicalCode);
+  const code = isRemapped ? customRemapMap.get(physicalCode) : physicalCode;
+
   activeKeys.delete(code);
   activeKeysCountEl.textContent = activeKeys.size;
 
@@ -757,7 +956,14 @@ window.addEventListener('keyup', (e) => {
     keyEl.classList.remove('active');
   }
 
-  appendEventLog('keyup', e);
+  const logEvent = isRemapped ? {
+    key: e.key,
+    code: `${code} (🔀 ${physicalCode})`,
+    which: e.which,
+    keyCode: e.keyCode,
+    location: e.location
+  } : e;
+  appendEventLog('keyup', logEvent);
   playKeySound(false);
 });
 
@@ -789,6 +995,7 @@ function resetAll() {
     HEATMAP_CLASSES.forEach(cls => el.classList.remove(cls));
     el.removeAttribute('title');
   });
+  updateRemapVisuals();
 
   lastKeyValueEl.textContent = '—';
   lastKeyCodeValueEl.textContent = 'event.code: none';
@@ -836,7 +1043,7 @@ function exportReport() {
 
   const report = {
     application: "Keyboard Tester",
-    version: "1.7.0",
+    version: "1.8.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
     soundProfile: currentSoundProfile,
@@ -856,6 +1063,10 @@ function exportReport() {
       accuracyPercent: practiceTotalInputs > 0 ? Math.max(0, Math.round((practiceCorrectInputs / practiceTotalInputs) * 100)) : 100,
       errors: practiceErrorCount,
       completed: practiceCursor >= practiceCurrentText.length
+    },
+    customRemaps: {
+      activeCount: customRemapMap.size,
+      mappings: Object.fromEntries(customRemapMap)
     },
     jitterAnalysis: {
       totalSamples: jitterSamples.length,
@@ -1126,6 +1337,65 @@ if (practiceNextBtn) {
     initPracticePrompt(practicePromptIndex);
   });
 }
+
+// Remap Mode & Modal Listeners
+if (remapToggleBtn) {
+  remapToggleBtn.addEventListener('click', toggleRemapMode);
+}
+
+if (remapApplyBtn) {
+  remapApplyBtn.addEventListener('click', applyRemap);
+}
+
+if (remapCancelBtn) {
+  remapCancelBtn.addEventListener('click', closeRemapModal);
+}
+
+if (remapModalCloseBtn) {
+  remapModalCloseBtn.addEventListener('click', closeRemapModal);
+}
+
+if (remapRemoveBtn) {
+  remapRemoveBtn.addEventListener('click', removeRemap);
+}
+
+if (clearAllRemapsBtn) {
+  clearAllRemapsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearAllRemaps();
+  });
+}
+
+if (remapModalBackdrop) {
+  remapModalBackdrop.addEventListener('click', (e) => {
+    if (e.target === remapModalBackdrop) {
+      closeRemapModal();
+    }
+  });
+}
+
+presetBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const target = btn.getAttribute('data-target');
+    if (target) {
+      setCapturedTarget(target);
+    }
+  });
+});
+
+// Click key to remap when Remap Mode is ON
+keyElements.forEach(el => {
+  el.addEventListener('click', (e) => {
+    if (remapMode) {
+      e.stopPropagation();
+      const code = el.getAttribute('data-code');
+      if (code) {
+        openRemapModal(code);
+      }
+    }
+  });
+});
 
 // Auto-focus keyboard wrapper on click so user is immediately ready
 keyboardWrapper.addEventListener('click', () => {
