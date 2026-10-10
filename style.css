@@ -206,6 +206,22 @@ body {
   border-radius: var(--radius-sm);
 }
 
+.variant-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-card-subtle);
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.variant-btn {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+}
+
 /* Diagnostics Cards */
 .diagnostic-grid {
   display: grid;
@@ -400,6 +416,34 @@ body {
 .keyboard.layout-60 .keyboard-nav,
 .keyboard.layout-60 .f-row {
   display: none;
+}
+
+/* 65% Compact Layout */
+.keyboard.layout-65 .keyboard-numpad {
+  display: none;
+}
+.keyboard.layout-65 .f-row {
+  display: none;
+}
+.keyboard.layout-65 .keyboard-nav .f-row,
+.keyboard.layout-65 .keyboard-nav .empty-row,
+.keyboard.layout-65 .keyboard-nav .key[data-code="Insert"],
+.keyboard.layout-65 .keyboard-nav .key[data-code="Home"],
+.keyboard.layout-65 .keyboard-nav .key[data-code="End"] {
+  display: none;
+}
+
+/* ISO Enter Variant */
+.keyboard.variant-iso .key-enter {
+  width: 82px;
+  height: 106px;
+  position: absolute;
+  right: 0;
+  z-index: 3;
+}
+.keyboard.variant-iso .key-backslash {
+  position: relative;
+  right: 88px;
 }
 
 .keyboard-main,

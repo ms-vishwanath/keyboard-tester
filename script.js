@@ -11,12 +11,16 @@ let eventCounter = 0;
 let soundEnabled = true;
 let currentOS = 'mac'; // 'mac' | 'win'
 let currentSoundProfile = 'blue'; // 'blue' | 'red' | 'brown'
-let currentLayout = '100'; // '100' | 'tkl' | '75' | '60'
+let currentLayout = '100'; // '100' | 'tkl' | '75' | '65' | '60'
+let currentVariant = 'ansi'; // 'ansi' | 'iso'
 let chatterCount = 0;
 let heatmapMode = false;
 const keyPressFrequencyMap = new Map();
 const lastKeyDownTimeMap = new Map();
 const holdDurations = [];
+const recentKeyPressTimes = [];
+let peakWpm = 0;
+let peakCps = 0;
 
 // DOM Elements
 const keyboardWrapper = document.getElementById('keyboardWrapper');
@@ -35,6 +39,8 @@ const avgHoldDurationEl = document.getElementById('avgHoldDuration');
 const chatterCountEl = document.getElementById('chatterCount');
 const chatterStatusEl = document.getElementById('chatterStatus');
 const chatterCardEl = document.getElementById('chatterCard');
+const currentWpmValueEl = document.getElementById('currentWpmValue');
+const cpsSubValueEl = document.getElementById('cpsSubValue');
 const preventShortcutsCheckbox = document.getElementById('preventShortcutsCheckbox');
 const eventLogBody = document.getElementById('eventLogBody');
 const logCounterEl = document.getElementById('logCounter');
@@ -43,6 +49,7 @@ const osMacBtn = document.getElementById('osMacBtn');
 const osWinBtn = document.getElementById('osWinBtn');
 const soundProfileSelect = document.getElementById('soundProfileSelect');
 const layoutBtns = document.querySelectorAll('.layout-btn');
+const variantBtns = document.querySelectorAll('.variant-btn');
 const soundToggleBtn = document.getElementById('soundToggleBtn');
 const heatmapToggleBtn = document.getElementById('heatmapToggleBtn');
 const exportBtn = document.getElementById('exportBtn');
@@ -340,6 +347,7 @@ window.addEventListener('keydown', (e) => {
   // Press Frequency Tracking
   const pressCount = (keyPressFrequencyMap.get(code) || 0) + 1;
   keyPressFrequencyMap.set(code, pressCount);
+  recentKeyPressTimes.push(now);
 
   activeKeys.add(code);
   testedKeys.add(code);
@@ -438,6 +446,11 @@ function resetAll() {
   chatterCountEl.style.color = '#10b981';
   chatterStatusEl.textContent = 'Status: Healthy (No bounce)';
   if (chatterCardEl) chatterCardEl.style.borderColor = 'var(--border-color)';
+  recentKeyPressTimes.length = 0;
+  peakWpm = 0;
+  peakCps = 0;
+  if (currentWpmValueEl) currentWpmValueEl.textContent = '0 WPM';
+  if (cpsSubValueEl) cpsSubValueEl.textContent = '0.0 CPS • Peak: 0 WPM';
   logCounterEl.textContent = '0 events recorded';
 
   eventLogBody.innerHTML = `
@@ -458,11 +471,12 @@ function exportReport() {
 
   const report = {
     application: "Keyboard Tester",
-    version: "1.3.0",
+    version: "1.4.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
     soundProfile: currentSoundProfile,
     layout: currentLayout,
+    enterVariant: currentVariant,
     heatmapModeActive: heatmapMode,
     summary: {
       testedKeysCount: testedKeys.size,
@@ -471,6 +485,8 @@ function exportReport() {
       maxRolloverKeys: maxRollover,
       chatterBounceAlerts: chatterCount,
       averageHoldDurationMs: avgHold,
+      peakWpm: peakWpm,
+      peakCps: Number(peakCps.toFixed(1)),
       totalEventsRecorded: eventCounter,
       totalKeyActuations: totalActuations
     },
@@ -512,7 +528,7 @@ function setLayout(layout) {
     btn.classList.toggle('active', btn.getAttribute('data-layout') === layout);
   });
 
-  keyboardEl.classList.remove('layout-tkl', 'layout-75', 'layout-60');
+  keyboardEl.classList.remove('layout-tkl', 'layout-75', 'layout-65', 'layout-60');
   if (layout !== '100') {
     keyboardEl.classList.add(`layout-${layout}`);
   }
@@ -528,6 +544,52 @@ layoutBtns.forEach(btn => {
     setLayout(btn.getAttribute('data-layout'));
   });
 });
+
+// Variant Switching Logic (ANSI vs ISO)
+function setVariant(variant) {
+  currentVariant = variant;
+  variantBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-variant') === variant);
+  });
+  keyboardEl.classList.toggle('variant-iso', variant === 'iso');
+}
+
+variantBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    setVariant(btn.getAttribute('data-variant'));
+  });
+});
+
+// Realtime Typing Speed (WPM & CPS) Benchmark Engine
+function updateSpeedBenchmark() {
+  const now = performance.now();
+  while (recentKeyPressTimes.length > 0 && now - recentKeyPressTimes[0] > 3000) {
+    recentKeyPressTimes.shift();
+  }
+
+  let currentCps = 0;
+  let currentWpm = 0;
+
+  if (recentKeyPressTimes.length >= 2) {
+    const timeSpanMs = now - recentKeyPressTimes[0];
+    if (timeSpanMs > 250) {
+      currentCps = recentKeyPressTimes.length / (timeSpanMs / 1000);
+      currentWpm = Math.round((currentCps * 60) / 5);
+    }
+  }
+
+  if (currentWpm > peakWpm) peakWpm = currentWpm;
+  if (currentCps > peakCps) peakCps = currentCps;
+
+  if (currentWpmValueEl) {
+    currentWpmValueEl.textContent = `${currentWpm} WPM`;
+  }
+  if (cpsSubValueEl) {
+    cpsSubValueEl.textContent = `${currentCps.toFixed(1)} CPS • Peak: ${peakWpm} WPM`;
+  }
+}
+
+setInterval(updateSpeedBenchmark, 200);
 
 // Sound Profile Selector
 if (soundProfileSelect) {
