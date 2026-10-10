@@ -27,6 +27,9 @@
         <button id="soundToggleBtn" class="pill-btn active" title="Toggle mechanical switch click audio">
           <span class="icon">🔊</span> Sound: ON
         </button>
+        <button id="exportBtn" class="pill-btn" title="Export diagnostic test report">
+          <span class="icon">📥</span> Export JSON
+        </button>
         <button id="resetBtn" class="pill-btn danger-outline" title="Reset all tested keys">
           <span class="icon">🔄</span> Reset Test
         </button>
@@ -59,6 +62,18 @@
         <div class="progress-bar-container">
           <div class="progress-bar" id="progressBar"></div>
         </div>
+      </div>
+
+      <div class="diag-card">
+        <span class="diag-label">Switch Hold Duration</span>
+        <div class="diag-value" id="lastHoldDuration">—</div>
+        <span class="diag-sub" id="avgHoldDuration">Avg hold: 0 ms</span>
+      </div>
+
+      <div class="diag-card" id="chatterCard">
+        <span class="diag-label">Switch Chatter / Debounce</span>
+        <div class="diag-value" id="chatterCount" style="color: #10b981;">0</div>
+        <span class="diag-sub" id="chatterStatus">Status: Healthy (No bounce)</span>
       </div>
     </section>
 

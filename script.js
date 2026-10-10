@@ -10,6 +10,9 @@ let maxRollover = 0;
 let eventCounter = 0;
 let soundEnabled = true;
 let currentOS = 'mac'; // 'mac' | 'win'
+let chatterCount = 0;
+const lastKeyDownTimeMap = new Map();
+const holdDurations = [];
 
 // DOM Elements
 const keyboardWrapper = document.getElementById('keyboardWrapper');
@@ -22,6 +25,11 @@ const activeKeysCountEl = document.getElementById('activeKeysCount');
 const maxRolloverValueEl = document.getElementById('maxRolloverValue');
 const testedProgressEl = document.getElementById('testedProgress');
 const progressBarEl = document.getElementById('progressBar');
+const lastHoldDurationEl = document.getElementById('lastHoldDuration');
+const avgHoldDurationEl = document.getElementById('avgHoldDuration');
+const chatterCountEl = document.getElementById('chatterCount');
+const chatterStatusEl = document.getElementById('chatterStatus');
+const chatterCardEl = document.getElementById('chatterCard');
 const preventShortcutsCheckbox = document.getElementById('preventShortcutsCheckbox');
 const eventLogBody = document.getElementById('eventLogBody');
 const logCounterEl = document.getElementById('logCounter');
@@ -29,6 +37,7 @@ const logCounterEl = document.getElementById('logCounter');
 const osMacBtn = document.getElementById('osMacBtn');
 const osWinBtn = document.getElementById('osWinBtn');
 const soundToggleBtn = document.getElementById('soundToggleBtn');
+const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 // Key code mapping cache
@@ -191,6 +200,19 @@ window.addEventListener('keydown', (e) => {
   }
 
   const code = e.code;
+  const now = performance.now();
+
+  // Switch Chatter / Bounce Detection (Rapid successive keydown < 25ms on same key)
+  const lastDown = lastKeyDownTimeMap.get(code);
+  if (lastDown && (now - lastDown < 25) && !e.repeat) {
+    chatterCount++;
+    chatterCountEl.textContent = chatterCount;
+    chatterCountEl.style.color = '#ef4444';
+    chatterStatusEl.textContent = `Alert: Chatter on ${code} (${Math.round(now - lastDown)}ms)`;
+    if (chatterCardEl) chatterCardEl.style.borderColor = '#ef4444';
+  }
+  lastKeyDownTimeMap.set(code, now);
+
   activeKeys.add(code);
   testedKeys.add(code);
 
@@ -224,6 +246,16 @@ window.addEventListener('keyup', (e) => {
   activeKeys.delete(code);
   activeKeysCountEl.textContent = activeKeys.size;
 
+  // Calculate Hold Duration (Actuation latency)
+  const downTime = lastKeyDownTimeMap.get(code);
+  if (downTime) {
+    const holdMs = Math.round(performance.now() - downTime);
+    lastHoldDurationEl.textContent = `${holdMs} ms`;
+    holdDurations.push(holdMs);
+    const avg = Math.round(holdDurations.reduce((a, b) => a + b, 0) / holdDurations.length);
+    avgHoldDurationEl.textContent = `Avg hold: ${avg} ms`;
+  }
+
   const keyEl = keyMap.get(code);
   if (keyEl) {
     keyEl.classList.remove('active');
@@ -251,6 +283,9 @@ function resetAll() {
   testedKeys.clear();
   maxRollover = 0;
   eventCounter = 0;
+  chatterCount = 0;
+  lastKeyDownTimeMap.clear();
+  holdDurations.length = 0;
 
   keyElements.forEach(el => {
     el.classList.remove('active', 'tested');
@@ -262,6 +297,12 @@ function resetAll() {
   keyLocationValueEl.textContent = 'Location: Standard';
   activeKeysCountEl.textContent = '0';
   maxRolloverValueEl.textContent = 'Max peak: 0 keys';
+  lastHoldDurationEl.textContent = '—';
+  avgHoldDurationEl.textContent = 'Avg hold: 0 ms';
+  chatterCountEl.textContent = '0';
+  chatterCountEl.style.color = '#10b981';
+  chatterStatusEl.textContent = 'Status: Healthy (No bounce)';
+  if (chatterCardEl) chatterCardEl.style.borderColor = 'var(--border-color)';
   logCounterEl.textContent = '0 events recorded';
 
   eventLogBody.innerHTML = `
@@ -274,6 +315,37 @@ function resetAll() {
 }
 
 resetBtn.addEventListener('click', resetAll);
+
+// Export Diagnostic Report
+function exportReport() {
+  const avgHold = holdDurations.length ? Math.round(holdDurations.reduce((a, b) => a + b, 0) / holdDurations.length) : 0;
+  const report = {
+    application: "Keyboard Tester",
+    version: "1.1.0",
+    exportTime: new Date().toISOString(),
+    osTarget: currentOS,
+    summary: {
+      testedKeysCount: testedKeys.size,
+      totalKeysAvailable: totalTestableKeys,
+      coveragePercent: totalTestableKeys > 0 ? `${Math.round((testedKeys.size / totalTestableKeys) * 100)}%` : "0%",
+      maxRolloverKeys: maxRollover,
+      chatterBounceAlerts: chatterCount,
+      averageHoldDurationMs: avgHold,
+      totalEventsRecorded: eventCounter
+    },
+    testedKeys: Array.from(testedKeys)
+  };
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `keyboard-test-report-${Date.now()}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+exportBtn.addEventListener('click', exportReport);
 
 // OS Toggle
 function setOS(os) {
