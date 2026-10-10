@@ -121,6 +121,25 @@
         <div class="diag-value highlight" id="currentWpmValue">0 WPM</div>
         <span class="diag-sub" id="cpsSubValue">0.0 CPS • Peak: 0 WPM</span>
       </div>
+
+      <div class="diag-card" id="jitterCard">
+        <div class="card-header-flex">
+          <span class="diag-label">Debounce Jitter Histogram</span>
+          <span class="jitter-badge" id="jitterStdBadge">σ: 0.0 ms</span>
+        </div>
+        <div class="jitter-canvas-container">
+          <canvas id="jitterCanvas" width="220" height="46" title="Interval bins: <5ms, 5-10ms, 10-15ms, 15-20ms, 20-25ms, >25ms"></canvas>
+        </div>
+        <div class="jitter-bin-labels">
+          <span>&lt;5ms</span>
+          <span>10ms</span>
+          <span>15ms</span>
+          <span>20ms</span>
+          <span>25ms</span>
+          <span>&gt;25ms</span>
+        </div>
+        <span class="diag-sub" id="jitterSummary">Samples: 0 • Min: — • Avg: 0 ms</span>
+      </div>
     </section>
 
     <!-- Toolbar / Options -->

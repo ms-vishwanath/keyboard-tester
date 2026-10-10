@@ -77,6 +77,10 @@ const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
 const standardLegend = document.getElementById('standardLegend');
 const heatmapLegend = document.getElementById('heatmapLegend');
+const jitterCanvas = document.getElementById('jitterCanvas');
+const jitterCtx = jitterCanvas ? jitterCanvas.getContext('2d') : null;
+const jitterStdBadge = document.getElementById('jitterStdBadge');
+const jitterSummary = document.getElementById('jitterSummary');
 
 // Key code mapping cache
 const keyMap = new Map();
@@ -253,6 +257,135 @@ function drawOscilloscope() {
 }
 
 requestAnimationFrame(drawOscilloscope);
+
+// Switch Chatter & Debounce Jitter Histogram Engine
+const JITTER_BIN_COLORS = [
+  '#ef4444', // <5ms (Severe chatter / contact bounce)
+  '#f59e0b', // 5-10ms (Fast debounce window alert)
+  '#eab308', // 10-15ms (Debounce zone)
+  '#10b981', // 15-20ms (Nominal switch response)
+  '#06b6d4', // 20-25ms (Conservative debounce margin)
+  '#3b82f6'  // >25ms (Clean actuation stroke)
+];
+
+const jitterBins = [0, 0, 0, 0, 0, 0];
+const jitterSamples = [];
+let minJitterDelta = null;
+
+function recordJitterSample(deltaMs) {
+  if (deltaMs <= 0) return;
+  const rounded = Math.round(deltaMs * 10) / 10;
+  jitterSamples.push(rounded);
+  if (jitterSamples.length > 500) {
+    jitterSamples.shift();
+  }
+
+  if (minJitterDelta === null || rounded < minJitterDelta) {
+    minJitterDelta = rounded;
+  }
+
+  // Classify into interval bins
+  if (rounded < 5) {
+    jitterBins[0]++;
+  } else if (rounded < 10) {
+    jitterBins[1]++;
+  } else if (rounded < 15) {
+    jitterBins[2]++;
+  } else if (rounded < 20) {
+    jitterBins[3]++;
+  } else if (rounded < 25) {
+    jitterBins[4]++;
+  } else {
+    jitterBins[5]++;
+  }
+
+  // Calculate Average and Standard Deviation (σ)
+  const n = jitterSamples.length;
+  const sum = jitterSamples.reduce((acc, val) => acc + val, 0);
+  const avg = sum / n;
+  const variance = jitterSamples.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
+  const stdDev = Math.sqrt(variance);
+
+  if (jitterStdBadge) {
+    jitterStdBadge.textContent = `σ: ${stdDev.toFixed(1)} ms`;
+  }
+  if (jitterSummary) {
+    jitterSummary.textContent = `Samples: ${n} • Min: ${minJitterDelta.toFixed(1)}ms • Avg: ${Math.round(avg)} ms`;
+  }
+
+  drawJitterHistogram();
+}
+
+function drawJitterHistogram() {
+  if (!jitterCanvas || !jitterCtx) return;
+
+  const width = jitterCanvas.width;
+  const height = jitterCanvas.height;
+
+  // Clear background
+  jitterCtx.fillStyle = '#070b12';
+  jitterCtx.fillRect(0, 0, width, height);
+
+  // Subtle horizontal center grid line
+  jitterCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+  jitterCtx.lineWidth = 1;
+  jitterCtx.beginPath();
+  jitterCtx.moveTo(0, height / 2);
+  jitterCtx.lineTo(width, height / 2);
+  jitterCtx.stroke();
+
+  const total = jitterSamples.length;
+  if (total === 0) {
+    jitterCtx.fillStyle = '#475569';
+    jitterCtx.font = '10px "JetBrains Mono", monospace';
+    jitterCtx.textAlign = 'center';
+    jitterCtx.fillText('Awaiting rapid actuations...', width / 2, height / 2 + 3);
+    return;
+  }
+
+  const maxBinCount = Math.max(...jitterBins, 1);
+  const binCount = jitterBins.length;
+  const gap = 6;
+  const totalGaps = (binCount + 1) * gap;
+  const barWidth = Math.max(8, (width - totalGaps) / binCount);
+
+  for (let i = 0; i < binCount; i++) {
+    const count = jitterBins[i];
+    const x = gap + i * (barWidth + gap);
+    const barHeight = count > 0 ? Math.max(4, Math.round((count / maxBinCount) * (height - 8))) : 2;
+    const y = height - barHeight - 2;
+
+    jitterCtx.fillStyle = count > 0 ? JITTER_BIN_COLORS[i] : 'rgba(255, 255, 255, 0.08)';
+    if (count > 0) {
+      jitterCtx.shadowColor = JITTER_BIN_COLORS[i];
+      jitterCtx.shadowBlur = 4;
+    } else {
+      jitterCtx.shadowBlur = 0;
+    }
+
+    // Rounded bar
+    jitterCtx.beginPath();
+    const r = 2;
+    if (typeof jitterCtx.roundRect === 'function') {
+      jitterCtx.roundRect(x, y, barWidth, barHeight, [r, r, 0, 0]);
+    } else {
+      jitterCtx.rect(x, y, barWidth, barHeight);
+    }
+    jitterCtx.fill();
+    jitterCtx.shadowBlur = 0;
+
+    // Small count label
+    if (count > 0 && barHeight > 10) {
+      jitterCtx.fillStyle = '#ffffff';
+      jitterCtx.font = '8px "JetBrains Mono", monospace';
+      jitterCtx.textAlign = 'center';
+      jitterCtx.fillText(String(count), x + barWidth / 2, Math.max(10, y - 2));
+    }
+  }
+}
+
+// Initial draw of empty jitter histogram
+drawJitterHistogram();
 
 // Location formatter
 function formatLocation(loc) {
@@ -546,12 +679,19 @@ window.addEventListener('keydown', (e) => {
 
   // Switch Chatter / Bounce Detection (Rapid successive keydown < 25ms on same key)
   const lastDown = lastKeyDownTimeMap.get(code);
-  if (lastDown && (now - lastDown < 25) && !e.repeat) {
-    chatterCount++;
-    chatterCountEl.textContent = chatterCount;
-    chatterCountEl.style.color = '#ef4444';
-    chatterStatusEl.textContent = `Alert: Chatter on ${code} (${Math.round(now - lastDown)}ms)`;
-    if (chatterCardEl) chatterCardEl.style.borderColor = '#ef4444';
+  if (lastDown && !e.repeat) {
+    const delta = now - lastDown;
+    if (delta < 25) {
+      chatterCount++;
+      chatterCountEl.textContent = chatterCount;
+      chatterCountEl.style.color = '#ef4444';
+      chatterStatusEl.textContent = `Alert: Chatter on ${code} (${Math.round(delta)}ms)`;
+      if (chatterCardEl) chatterCardEl.style.borderColor = '#ef4444';
+    }
+    // Record debounce jitter intervals for rapid re-strikes under 200ms
+    if (delta < 200) {
+      recordJitterSample(delta);
+    }
   }
   lastKeyDownTimeMap.set(code, now);
 
@@ -670,6 +810,12 @@ function resetAll() {
   if (practiceMode) {
     initPracticePrompt(practicePromptIndex);
   }
+  jitterSamples.length = 0;
+  jitterBins.fill(0);
+  minJitterDelta = null;
+  if (jitterStdBadge) jitterStdBadge.textContent = 'σ: 0.0 ms';
+  if (jitterSummary) jitterSummary.textContent = 'Samples: 0 • Min: — • Avg: 0 ms';
+  drawJitterHistogram();
   logCounterEl.textContent = '0 events recorded';
 
   eventLogBody.innerHTML = `
@@ -690,7 +836,7 @@ function exportReport() {
 
   const report = {
     application: "Keyboard Tester",
-    version: "1.6.0",
+    version: "1.7.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
     soundProfile: currentSoundProfile,
@@ -710,6 +856,20 @@ function exportReport() {
       accuracyPercent: practiceTotalInputs > 0 ? Math.max(0, Math.round((practiceCorrectInputs / practiceTotalInputs) * 100)) : 100,
       errors: practiceErrorCount,
       completed: practiceCursor >= practiceCurrentText.length
+    },
+    jitterAnalysis: {
+      totalSamples: jitterSamples.length,
+      minDeltaMs: minJitterDelta !== null ? minJitterDelta : null,
+      averageDeltaMs: jitterSamples.length > 0 ? Number((jitterSamples.reduce((a, b) => a + b, 0) / jitterSamples.length).toFixed(1)) : 0,
+      stdDevMs: jitterSamples.length > 0 ? Number(Math.sqrt(jitterSamples.reduce((a, b, _, arr) => a + Math.pow(b - (arr.reduce((x, y) => x + y, 0) / arr.length), 2), 0) / jitterSamples.length).toFixed(2)) : 0,
+      distributionBins: {
+        severeUnder5ms: jitterBins[0],
+        fast5to10ms: jitterBins[1],
+        standard10to15ms: jitterBins[2],
+        normal15to20ms: jitterBins[3],
+        conservative20to25ms: jitterBins[4],
+        cleanOver25ms: jitterBins[5]
+      }
     },
     summary: {
       testedKeysCount: testedKeys.size,
