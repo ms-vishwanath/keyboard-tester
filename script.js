@@ -555,7 +555,9 @@ function setLayout(layout) {
     keyboardEl.classList.add(`layout-${layout}`);
   }
 
-  // Allow DOM reflow then recalculate
+  // Reading offsetParent forces a synchronous layout, so recalculate now so the
+  // progress denominator is never stale, then again after the next frame
+  calculateVisibleTestableKeys();
   requestAnimationFrame(() => {
     calculateVisibleTestableKeys();
   });
@@ -576,6 +578,8 @@ function setVariant(variant) {
   keyboardEl.classList.toggle('variant-iso', variant === 'iso');
 
   // The variant swaps which keys are present, so recalculate the testable total
+  // synchronously (offsetParent forces layout) and again after the next frame
+  calculateVisibleTestableKeys();
   requestAnimationFrame(() => {
     calculateVisibleTestableKeys();
   });
