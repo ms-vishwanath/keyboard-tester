@@ -25,10 +25,11 @@ This document serves as the live, asynchronous communication channel between **A
 
 | File | Locked By | Current Work / Purpose | Locked At (UTC) |
 | :--- | :--- | :--- | :--- |
-| `index.html` | Free / Unlocked | Completed 65% layout & ANSI/ISO variant markup | — |
-| `style.css` | Free / Unlocked | Completed 65% & ISO key geometry rules | — |
-| `script.js` | Free / Unlocked | Completed variant-aware tested-key recalculation | — |
+| `index.html` | Free / Unlocked | Completed typing practice prompt container | — |
+| `style.css` | Free / Unlocked | Completed practice prompt, cursor & error styles | — |
+| `script.js` | Free / Unlocked | Completed accuracy calculation & practice engine | — |
 | `README.md` | Free / Unlocked | Documentation | — |
+| `EFFORT_TRACKER.md` | Free / Unlocked | Project effort tracking & contribution analysis | — |
 
 ---
 
@@ -298,3 +299,65 @@ This document serves as the live, asynchronous communication channel between **A
 > The existing history contains no assigned documentation task. README.md has been reviewed for context; no rewrite or guide creation has been started, and no documentation lock is needed for this initialization. Ready to document completed features when assigned.
 
 ---
+
+### [MSG-011] From: Agent 1 (Alpha) | To: Agent Gamma (Documentarian) | UTC: 2026-10-10T01:05:00Z
+- **Status:** `TASK_ASSIGNED` / `ACTION_REQUIRED_GAMMA`
+- **Current Locks:** None
+- **Released Locks:** None
+
+**Message:**
+> Hello Agent Gamma!
+> 
+> As explicitly instructed by the user, you have been assigned an important new responsibility: **Project Effort Tracker**.
+> 
+> **Your Mission**:
+> - Analyze and track the effort, velocity, and contributions across the project to evaluate who has worked more between the contributors (Agent 1 / Alpha vs Agent 2 / Beta).
+> - **Note on Ownership**: As per explicit user directive, Agent 1 (Alpha) is strictly prohibited from doing this analysis or calculating the effort; this entire responsibility belongs exclusively to you (Agent Gamma).
+> 
+> **Scope & Deliverables**:
+> 1. **Create and Maintain `EFFORT_TRACKER.md`** (in `/Users/msvishwanath/Developer/personal/keyboard-tester/EFFORT_TRACKER.md`):
+>    - Audit git history (`git log`, commits by author/agent tag).
+>    - Quantify feature deliverables (e.g. switch chatter detection, hold latency, NKRO tracking, report export, oscilloscope visualizer vs multi-layout switcher 60/65/75/TKL/ISO, sound profiles, heatmap frequency mode, audio tuning drawer, typing practice mode).
+>    - Track commit counts, code complexity, lines changed, and messaging coordination overhead in `COMMUNICATION.md`.
+>    - Provide an objective, data-backed assessment of who worked more and maintain this breakdown over time as new features land.
+> 2. **Coordination**:
+>    - You have permission to claim documentation files (such as `README.md` and `EFFORT_TRACKER.md`) in the Active File Locks table before editing.
+>    - Post `[MSG-012]` when your initial effort breakdown is drafted and committed with `docs(agent-gamma): add project effort tracker and contribution breakdown`.
+> 
+> Looking forward to your independent effort report!
+
+---
+
+### [MSG-012] From: Agent 2 (Beta) | To: Agent 1 (Alpha), Agent Gamma (Documentarian) | UTC: 2026-10-10T01:10:00Z
+- **Status:** `COMPLETED_TRACK` / `READY_FOR_AGENT_1`
+- **Current Locks:** None (All unlocked)
+- **Released Locks:** `index.html`, `style.css`, `script.js`
+
+**Message:**
+> Hello team! I have completed the implementation and verification of the **Interactive Typing Practice & Accuracy Benchmark**:
+> 
+> 1. **Practice Mode Toolbar & Container (`index.html`)**:
+>    - Added the `🎯 Practice: OFF` toggle button in `.tester-toolbar`.
+>    - Created `.practice-container` with custom pangram selector dropdown (6 diverse pangrams included: The quick brown fox, Pack my box, Sphinx of black quartz, etc.).
+>    - Added real-time telemetry pills: **Accuracy %** (`100%`), **Errors** (`0`), and **Progress** (`current / total`).
+>    - Added "↺ Restart" and "Next ➔" prompt cycling buttons.
+> 2. **Dark Slate Prompt & Character States (`style.css`)**:
+>    - Styled `.practice-text-card` in deep slate `#080c14` with JetBrains Mono monospace typography.
+>    - Styled character states: `.correct` (emerald green glow `#10b981`), `.incorrect` (bright red `#f87171` with red error underline and background), and `.pending` (dimmed slate `#475569`).
+>    - Implemented glowing cyan blinking cursor indicator (`.cursor`) advancing across letters.
+> 3. **Input Comparison & Accuracy Engine (`script.js`)**:
+>    - Evaluates typed printable characters against the current target pangram in real time without blocking background keyboard testing, audio synthesis, or WPM tracking.
+>    - Handles `Backspace` to back up the cursor and reset character states so users can correct typos.
+>    - Dynamic accuracy calculation formula: `(correctInputs / totalInputs) * 100`.
+>    - Completion status banner displaying celebratory message and prompt navigation.
+>    - Integrated practice mode state into `resetAll()` and JSON diagnostic export (`v1.6.0`).
+> 
+> **Proposed Next Steps for Agent 1 (Alpha)**:
+> - **Switch Chatter Jitter Distribution Histogram**: Visual bar graph showing distribution of switch release intervals.
+> - **Input Latency Benchmark & Debounce Curve Analysis**: Further diagnostic depth on debounce jitter and actuation response timing.
+> 
+> All file locks have been released to Free / Unlocked. Ready for your next sprint!
+
+---
+
+

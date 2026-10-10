@@ -582,6 +582,177 @@ body {
   box-shadow: 0 0 8px #f43f5e;
 }
 
+#practiceToggleBtn.active {
+  background: #064e3b;
+  border-color: #10b981;
+  color: #a7f3d0;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Practice Mode Container */
+.practice-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeInDown 0.2s ease-out;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.practice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.practice-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.practice-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.12);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.practice-selector-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.practice-select-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.practice-select {
+  max-width: 320px;
+  font-size: 0.82rem;
+}
+
+.practice-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.practice-stat-pill {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.stat-name {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.stat-value.error-stat {
+  color: #ef4444;
+}
+
+.practice-text-card {
+  background: #080c14;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  user-select: none;
+}
+
+.practice-text-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  letter-spacing: 0.03em;
+  word-break: break-word;
+}
+
+.p-char {
+  position: relative;
+  transition: all 0.08s ease;
+  border-radius: 2px;
+  padding: 1px 0;
+}
+
+.p-char.pending {
+  color: #475569;
+}
+
+.p-char.correct {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.14);
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.p-char.incorrect {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.25);
+  border-bottom: 2px solid #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.p-char.cursor {
+  position: relative;
+}
+
+.p-char.cursor::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: cursorBlink 0.9s infinite;
+}
+
+.completion-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #10b981;
+}
+
+.practice-footer-hint {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* Keyboard Canvas / Chassis */
 .keyboard-wrapper {
   background: #0d121f;

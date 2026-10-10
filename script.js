@@ -63,6 +63,16 @@ const pitchValue = document.getElementById('pitchValue');
 const testAudioBtn = document.getElementById('testAudioBtn');
 const resetAudioBtn = document.getElementById('resetAudioBtn');
 const heatmapToggleBtn = document.getElementById('heatmapToggleBtn');
+const practiceToggleBtn = document.getElementById('practiceToggleBtn');
+const practiceContainer = document.getElementById('practiceContainer');
+const practicePromptSelect = document.getElementById('practicePromptSelect');
+const practiceAccuracyEl = document.getElementById('practiceAccuracy');
+const practiceErrorsEl = document.getElementById('practiceErrors');
+const practiceProgressEl = document.getElementById('practiceProgress');
+const practiceResetBtn = document.getElementById('practiceResetBtn');
+const practiceNextBtn = document.getElementById('practiceNextBtn');
+const practiceTextDisplay = document.getElementById('practiceTextDisplay');
+const practiceCompletionStatusEl = document.getElementById('practiceCompletionStatus');
 const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
 const standardLegend = document.getElementById('standardLegend');
@@ -404,6 +414,127 @@ function toggleHeatmapMode() {
   }
 }
 
+// Interactive Typing Practice & Accuracy Benchmark
+const PRACTICE_PROMPTS = [
+  "The quick brown fox jumps over the lazy dog",
+  "Pack my box with five dozen liquor jugs",
+  "Sphinx of black quartz, judge my vow",
+  "How vexingly quick daft zebras jump",
+  "Jackdaws love my big sphinx of quartz",
+  "Crazy Fredrick bought many very exquisite opal jewels"
+];
+
+let practiceMode = false;
+let practicePromptIndex = 0;
+let practiceCurrentText = PRACTICE_PROMPTS[0];
+let practiceCursor = 0;
+let practiceCharStates = []; // 'pending' | 'correct' | 'incorrect'
+let practiceTotalInputs = 0;
+let practiceCorrectInputs = 0;
+let practiceErrorCount = 0;
+
+function initPracticePrompt(index = 0) {
+  practicePromptIndex = index;
+  practiceCurrentText = PRACTICE_PROMPTS[practicePromptIndex] || PRACTICE_PROMPTS[0];
+  practiceCursor = 0;
+  practiceCharStates = Array(practiceCurrentText.length).fill('pending');
+  practiceTotalInputs = 0;
+  practiceCorrectInputs = 0;
+  practiceErrorCount = 0;
+  if (practicePromptSelect) {
+    practicePromptSelect.value = String(practicePromptIndex);
+  }
+  renderPracticePrompt();
+}
+
+function renderPracticePrompt() {
+  if (!practiceTextDisplay) return;
+
+  const html = [];
+  for (let i = 0; i < practiceCurrentText.length; i++) {
+    const char = practiceCurrentText[i];
+    const state = practiceCharStates[i] || 'pending';
+    const isCursor = i === practiceCursor;
+    const displayChar = char === ' ' ? '&nbsp;' : escapeHtml(char);
+    html.push(`<span class="p-char ${state} ${isCursor ? 'cursor' : ''}">${displayChar}</span>`);
+  }
+  if (practiceCursor >= practiceCurrentText.length) {
+    html.push(`<span class="p-char cursor end-cursor"></span>`);
+  }
+  practiceTextDisplay.innerHTML = html.join('');
+
+  if (practiceProgressEl) {
+    practiceProgressEl.textContent = `${practiceCursor} / ${practiceCurrentText.length}`;
+  }
+  if (practiceErrorsEl) {
+    practiceErrorsEl.textContent = practiceErrorCount;
+  }
+  if (practiceAccuracyEl) {
+    const acc = practiceTotalInputs > 0 ? Math.max(0, Math.round((practiceCorrectInputs / practiceTotalInputs) * 100)) : 100;
+    practiceAccuracyEl.textContent = `${acc}%`;
+  }
+  if (practiceCompletionStatusEl) {
+    if (practiceCursor >= practiceCurrentText.length) {
+      practiceCompletionStatusEl.textContent = '🎉 Prompt Completed! Press Next ➔ or Restart ↺';
+      practiceCompletionStatusEl.style.color = '#10b981';
+    } else {
+      practiceCompletionStatusEl.textContent = '';
+    }
+  }
+}
+
+function handlePracticeKeyInput(e) {
+  if (!practiceMode) return;
+
+  if (e.key === 'Backspace') {
+    if (practiceCursor > 0) {
+      practiceCursor--;
+      practiceCharStates[practiceCursor] = 'pending';
+      renderPracticePrompt();
+    }
+    return;
+  }
+
+  // Single printable characters (including Space)
+  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (practiceCursor < practiceCurrentText.length) {
+      practiceTotalInputs++;
+      const expectedChar = practiceCurrentText[practiceCursor];
+      if (e.key === expectedChar) {
+        practiceCharStates[practiceCursor] = 'correct';
+        practiceCorrectInputs++;
+      } else {
+        practiceCharStates[practiceCursor] = 'incorrect';
+        practiceErrorCount++;
+      }
+      practiceCursor++;
+      renderPracticePrompt();
+    }
+  }
+}
+
+function togglePracticeMode() {
+  practiceMode = !practiceMode;
+  if (practiceMode) {
+    if (practiceToggleBtn) {
+      practiceToggleBtn.classList.add('active');
+      practiceToggleBtn.textContent = '🎯 Practice: ON';
+    }
+    if (practiceContainer) {
+      practiceContainer.style.display = 'flex';
+    }
+    initPracticePrompt(practicePromptIndex);
+  } else {
+    if (practiceToggleBtn) {
+      practiceToggleBtn.classList.remove('active');
+      practiceToggleBtn.textContent = '🎯 Practice: OFF';
+    }
+    if (practiceContainer) {
+      practiceContainer.style.display = 'none';
+    }
+  }
+}
+
 // Handle Key Down
 window.addEventListener('keydown', (e) => {
   if (shouldPreventShortcut(e)) {
@@ -428,6 +559,11 @@ window.addEventListener('keydown', (e) => {
   const pressCount = (keyPressFrequencyMap.get(code) || 0) + 1;
   keyPressFrequencyMap.set(code, pressCount);
   recentKeyPressTimes.push(now);
+
+  // Handle Practice Mode input evaluation
+  if (practiceMode) {
+    handlePracticeKeyInput(e);
+  }
 
   activeKeys.add(code);
   testedKeys.add(code);
@@ -531,6 +667,9 @@ function resetAll() {
   peakCps = 0;
   if (currentWpmValueEl) currentWpmValueEl.textContent = '0 WPM';
   if (cpsSubValueEl) cpsSubValueEl.textContent = '0.0 CPS • Peak: 0 WPM';
+  if (practiceMode) {
+    initPracticePrompt(practicePromptIndex);
+  }
   logCounterEl.textContent = '0 events recorded';
 
   eventLogBody.innerHTML = `
@@ -551,7 +690,7 @@ function exportReport() {
 
   const report = {
     application: "Keyboard Tester",
-    version: "1.5.0",
+    version: "1.6.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
     soundProfile: currentSoundProfile,
@@ -564,6 +703,14 @@ function exportReport() {
     layout: currentLayout,
     enterVariant: currentVariant,
     heatmapModeActive: heatmapMode,
+    practiceMode: {
+      active: practiceMode,
+      prompt: practiceCurrentText,
+      progress: `${practiceCursor} / ${practiceCurrentText.length}`,
+      accuracyPercent: practiceTotalInputs > 0 ? Math.max(0, Math.round((practiceCorrectInputs / practiceTotalInputs) * 100)) : 100,
+      errors: practiceErrorCount,
+      completed: practiceCursor >= practiceCurrentText.length
+    },
     summary: {
       testedKeysCount: testedKeys.size,
       totalKeysAvailable: currentTotalTestableKeys,
@@ -793,6 +940,31 @@ document.addEventListener('click', (e) => {
 // Heatmap Toggle
 if (heatmapToggleBtn) {
   heatmapToggleBtn.addEventListener('click', toggleHeatmapMode);
+}
+
+// Practice Mode Event Listeners
+if (practiceToggleBtn) {
+  practiceToggleBtn.addEventListener('click', togglePracticeMode);
+}
+
+if (practicePromptSelect) {
+  practicePromptSelect.addEventListener('change', (e) => {
+    initPracticePrompt(parseInt(e.target.value, 10));
+  });
+}
+
+if (practiceResetBtn) {
+  practiceResetBtn.addEventListener('click', () => {
+    initPracticePrompt(practicePromptIndex);
+  });
+}
+
+if (practiceNextBtn) {
+  practiceNextBtn.addEventListener('click', () => {
+    practicePromptIndex = (practicePromptIndex + 1) % PRACTICE_PROMPTS.length;
+    if (practicePromptSelect) practicePromptSelect.value = String(practicePromptIndex);
+    initPracticePrompt(practicePromptIndex);
+  });
 }
 
 // Auto-focus keyboard wrapper on click so user is immediately ready
