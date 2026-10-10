@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Keyboard Tester — Test Key Latency, N-Key Rollover & Health</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">⌨️</div>
+        <div>
+          <h1>Keyboard Tester</h1>
+          <p class="subtitle">Diagnostic tool for testing mechanical & membrane keyboard keys, rollover, and latency</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="os-toggle-group">
+          <button id="osMacBtn" class="pill-btn active" title="Switch to macOS layout labels">macOS</button>
+          <button id="osWinBtn" class="pill-btn" title="Switch to Windows layout labels">Windows</button>
+        </div>
+        <button id="soundToggleBtn" class="pill-btn active" title="Toggle mechanical switch click audio">
+          <span class="icon">🔊</span> Sound: ON
+        </button>
+        <button id="resetBtn" class="pill-btn danger-outline" title="Reset all tested keys">
+          <span class="icon">🔄</span> Reset Test
+        </button>
+      </div>
+    </header>
+
+    <!-- Diagnostics Panel -->
+    <section class="diagnostic-grid">
+      <div class="diag-card primary">
+        <span class="diag-label">Last Pressed Key</span>
+        <div class="diag-value highlight" id="lastKeyValue">—</div>
+        <span class="diag-sub" id="lastKeyCodeValue">event.code: none</span>
+      </div>
+
+      <div class="diag-card">
+        <span class="diag-label">Key Code / Which</span>
+        <div class="diag-value" id="lastWhichValue">—</div>
+        <span class="diag-sub" id="keyLocationValue">Location: Standard</span>
+      </div>
+
+      <div class="diag-card">
+        <span class="diag-label">Simultaneous Keys (Rollover)</span>
+        <div class="diag-value" id="activeKeysCount">0</div>
+        <span class="diag-sub" id="maxRolloverValue">Max peak: 0 keys</span>
+      </div>
+
+      <div class="diag-card">
+        <span class="diag-label">Tested Keys Progress</span>
+        <div class="diag-value" id="testedProgress">0 / 0</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar / Options -->
+    <div class="tester-toolbar">
+      <div class="toolbar-left">
+        <label class="toggle-checkbox">
+          <input type="checkbox" id="preventShortcutsCheckbox" checked />
+          <span class="checkmark"></span>
+          <span>Prevent browser shortcut defaults while testing (Tab, F-keys, etc.)</span>
+        </label>
+      </div>
+      <div class="status-legend">
+        <span class="legend-item"><span class="dot active-dot"></span> Active (Pressed)</span>
+        <span class="legend-item"><span class="dot tested-dot"></span> Tested (Working)</span>
+        <span class="legend-item"><span class="dot untouched-dot"></span> Untested</span>
+      </div>
+    </div>
+
+    <!-- Interactive Keyboard Canvas / Layout -->
+    <main class="keyboard-wrapper" id="keyboardWrapper" tabindex="0">
+      <div class="keyboard" id="keyboard">
+        <!-- Main 60%/TKL Section -->
+        <div class="keyboard-main">
+          <!-- Function Row -->
+          <div class="key-row f-row">
+            <div class="key key-esc" data-code="Escape"><span class="key-label">Esc</span></div>
+            <div class="key-spacer-sm"></div>
+            <div class="key" data-code="F1"><span class="key-label">F1</span></div>
+            <div class="key" data-code="F2"><span class="key-label">F2</span></div>
+            <div class="key" data-code="F3"><span class="key-label">F3</span></div>
+            <div class="key" data-code="F4"><span class="key-label">F4</span></div>
+            <div class="key-spacer-sm"></div>
+            <div class="key" data-code="F5"><span class="key-label">F5</span></div>
+            <div class="key" data-code="F6"><span class="key-label">F6</span></div>
+            <div class="key" data-code="F7"><span class="key-label">F7</span></div>
+            <div class="key" data-code="F8"><span class="key-label">F8</span></div>
+            <div class="key-spacer-sm"></div>
+            <div class="key" data-code="F9"><span class="key-label">F9</span></div>
+            <div class="key" data-code="F10"><span class="key-label">F10</span></div>
+            <div class="key" data-code="F11"><span class="key-label">F11</span></div>
+            <div class="key" data-code="F12"><span class="key-label">F12</span></div>
+          </div>
+
+          <!-- Number Row -->
+          <div class="key-row">
+            <div class="key" data-code="Backquote"><span class="key-label-sub">~</span><span class="key-label">`</span></div>
+            <div class="key" data-code="Digit1"><span class="key-label-sub">!</span><span class="key-label">1</span></div>
+            <div class="key" data-code="Digit2"><span class="key-label-sub">@</span><span class="key-label">2</span></div>
+            <div class="key" data-code="Digit3"><span class="key-label-sub">#</span><span class="key-label">3</span></div>
+            <div class="key" data-code="Digit4"><span class="key-label-sub">$</span><span class="key-label">4</span></div>
+            <div class="key" data-code="Digit5"><span class="key-label-sub">%</span><span class="key-label">5</span></div>
+            <div class="key" data-code="Digit6"><span class="key-label-sub">^</span><span class="key-label">6</span></div>
+            <div class="key" data-code="Digit7"><span class="key-label-sub">&</span><span class="key-label">7</span></div>
+            <div class="key" data-code="Digit8"><span class="key-label-sub">*</span><span class="key-label">8</span></div>
+            <div class="key" data-code="Digit9"><span class="key-label-sub">(</span><span class="key-label">9</span></div>
+            <div class="key" data-code="Digit0"><span class="key-label-sub">)</span><span class="key-label">0</span></div>
+            <div class="key" data-code="Minus"><span class="key-label-sub">_</span><span class="key-label">-</span></div>
+            <div class="key" data-code="Equal"><span class="key-label-sub">+</span><span class="key-label">=</span></div>
+            <div class="key key-backspace" data-code="Backspace"><span class="key-label">Backspace</span></div>
+          </div>
+
+          <!-- QWERTY Row -->
+          <div class="key-row">
+            <div class="key key-tab" data-code="Tab"><span class="key-label">Tab</span></div>
+            <div class="key" data-code="KeyQ"><span class="key-label">Q</span></div>
+            <div class="key" data-code="KeyW"><span class="key-label">W</span></div>
+            <div class="key" data-code="KeyE"><span class="key-label">E</span></div>
+            <div class="key" data-code="KeyR"><span class="key-label">R</span></div>
+            <div class="key" data-code="KeyT"><span class="key-label">T</span></div>
+            <div class="key" data-code="KeyY"><span class="key-label">Y</span></div>
+            <div class="key" data-code="KeyU"><span class="key-label">U</span></div>
+            <div class="key" data-code="KeyI"><span class="key-label">I</span></div>
+            <div class="key" data-code="KeyO"><span class="key-label">O</span></div>
+            <div class="key" data-code="KeyP"><span class="key-label">P</span></div>
+            <div class="key" data-code="BracketLeft"><span class="key-label-sub">{</span><span class="key-label">[</span></div>
+            <div class="key" data-code="BracketRight"><span class="key-label-sub">}</span><span class="key-label">]</span></div>
+            <div class="key key-backslash" data-code="Backslash"><span class="key-label-sub">|</span><span class="key-label">\</span></div>
+          </div>
+
+          <!-- ASDF Row -->
+          <div class="key-row">
+            <div class="key key-caps" data-code="CapsLock"><span class="key-label">Caps Lock</span></div>
+            <div class="key" data-code="KeyA"><span class="key-label">A</span></div>
+            <div class="key" data-code="KeyS"><span class="key-label">S</span></div>
+            <div class="key" data-code="KeyD"><span class="key-label">D</span></div>
+            <div class="key" data-code="KeyF"><span class="key-label">F</span></div>
+            <div class="key" data-code="KeyG"><span class="key-label">G</span></div>
+            <div class="key" data-code="KeyH"><span class="key-label">H</span></div>
+            <div class="key" data-code="KeyJ"><span class="key-label">J</span></div>
+            <div class="key" data-code="KeyK"><span class="key-label">K</span></div>
+            <div class="key" data-code="KeyL"><span class="key-label">L</span></div>
+            <div class="key" data-code="Semicolon"><span class="key-label-sub">:</span><span class="key-label">;</span></div>
+            <div class="key" data-code="Quote"><span class="key-label-sub">"</span><span class="key-label">'</span></div>
+            <div class="key key-enter" data-code="Enter"><span class="key-label">Enter</span></div>
+          </div>
+
+          <!-- ZXCV Row -->
+          <div class="key-row">
+            <div class="key key-lshift" data-code="ShiftLeft"><span class="key-label">Shift</span></div>
+            <div class="key" data-code="KeyZ"><span class="key-label">Z</span></div>
+            <div class="key" data-code="KeyX"><span class="key-label">X</span></div>
+            <div class="key" data-code="KeyC"><span class="key-label">C</span></div>
+            <div class="key" data-code="KeyV"><span class="key-label">V</span></div>
+            <div class="key" data-code="KeyB"><span class="key-label">B</span></div>
+            <div class="key" data-code="KeyN"><span class="key-label">N</span></div>
+            <div class="key" data-code="KeyM"><span class="key-label">M</span></div>
+            <div class="key" data-code="Comma"><span class="key-label-sub">&lt;</span><span class="key-label">,</span></div>
+            <div class="key" data-code="Period"><span class="key-label-sub">&gt;</span><span class="key-label">.</span></div>
+            <div class="key" data-code="Slash"><span class="key-label-sub">?</span><span class="key-label">/</span></div>
+            <div class="key key-rshift" data-code="ShiftRight"><span class="key-label">Shift</span></div>
+          </div>
+
+          <!-- Bottom Control Row -->
+          <div class="key-row">
+            <div class="key key-mod" data-code="ControlLeft"><span class="key-label os-label" data-mac="Control" data-win="Ctrl">Control</span></div>
+            <div class="key key-mod" data-code="AltLeft"><span class="key-label os-label" data-mac="Option" data-win="Alt">Option</span></div>
+            <div class="key key-mod key-cmd" data-code="MetaLeft"><span class="key-label os-label" data-mac="⌘ Cmd" data-win="⊞ Win">⌘ Cmd</span></div>
+            <div class="key key-space" data-code="Space"><span class="key-label">Space</span></div>
+            <div class="key key-mod key-cmd" data-code="MetaRight"><span class="key-label os-label" data-mac="⌘ Cmd" data-win="⊞ Win">⌘ Cmd</span></div>
+            <div class="key key-mod" data-code="AltRight"><span class="key-label os-label" data-mac="Option" data-win="Alt">Option</span></div>
+            <div class="key key-mod" data-code="ContextMenu"><span class="key-label os-label" data-mac="Menu" data-win="Menu">Menu</span></div>
+            <div class="key key-mod" data-code="ControlRight"><span class="key-label os-label" data-mac="Control" data-win="Ctrl">Control</span></div>
+          </div>
+        </div>
+
+        <!-- Navigation Cluster (Arrows + Edit keys) -->
+        <div class="keyboard-nav">
+          <div class="key-row f-row">
+            <div class="key" data-code="PrintScreen"><span class="key-label">PrtSc</span></div>
+            <div class="key" data-code="ScrollLock"><span class="key-label">ScrLk</span></div>
+            <div class="key" data-code="Pause"><span class="key-label">Pause</span></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key" data-code="Insert"><span class="key-label">Ins</span></div>
+            <div class="key" data-code="Home"><span class="key-label">Home</span></div>
+            <div class="key" data-code="PageUp"><span class="key-label">PgUp</span></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key" data-code="Delete"><span class="key-label">Del</span></div>
+            <div class="key" data-code="End"><span class="key-label">End</span></div>
+            <div class="key" data-code="PageDown"><span class="key-label">PgDn</span></div>
+          </div>
+
+          <div class="key-row empty-row"></div>
+
+          <div class="key-row nav-arrows-top">
+            <div class="key-dummy"></div>
+            <div class="key key-arrow" data-code="ArrowUp"><span class="key-label">▲</span></div>
+            <div class="key-dummy"></div>
+          </div>
+
+          <div class="key-row nav-arrows-bottom">
+            <div class="key key-arrow" data-code="ArrowLeft"><span class="key-label">◀</span></div>
+            <div class="key key-arrow" data-code="ArrowDown"><span class="key-label">▼</span></div>
+            <div class="key key-arrow" data-code="ArrowRight"><span class="key-label">▶</span></div>
+          </div>
+        </div>
+
+        <!-- Numpad Cluster -->
+        <div class="keyboard-numpad">
+          <div class="key-row f-row">
+            <div class="key-dummy"></div>
+            <div class="key-dummy"></div>
+            <div class="key-dummy"></div>
+            <div class="key-dummy"></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key" data-code="NumLock"><span class="key-label">Num</span></div>
+            <div class="key" data-code="NumpadDivide"><span class="key-label">/</span></div>
+            <div class="key" data-code="NumpadMultiply"><span class="key-label">*</span></div>
+            <div class="key" data-code="NumpadSubtract"><span class="key-label">-</span></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key" data-code="Numpad7"><span class="key-label">7</span></div>
+            <div class="key" data-code="Numpad8"><span class="key-label">8</span></div>
+            <div class="key" data-code="Numpad9"><span class="key-label">9</span></div>
+            <div class="key key-numpad-add" data-code="NumpadAdd"><span class="key-label">+</span></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key" data-code="Numpad4"><span class="key-label">4</span></div>
+            <div class="key" data-code="Numpad5"><span class="key-label">5</span></div>
+            <div class="key" data-code="Numpad6"><span class="key-label">6</span></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key" data-code="Numpad1"><span class="key-label">1</span></div>
+            <div class="key" data-code="Numpad2"><span class="key-label">2</span></div>
+            <div class="key" data-code="Numpad3"><span class="key-label">3</span></div>
+            <div class="key key-numpad-enter" data-code="NumpadEnter"><span class="key-label">Enter</span></div>
+          </div>
+
+          <div class="key-row">
+            <div class="key key-numpad-0" data-code="Numpad0"><span class="key-label">0</span></div>
+            <div class="key" data-code="NumpadDecimal"><span class="key-label">.</span></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Key Log Table -->
+    <section class="log-section">
+      <div class="log-header">
+        <h2>Live Event Stream</h2>
+        <span class="log-counter" id="logCounter">0 events recorded</span>
+      </div>
+      <div class="table-container">
+        <table class="event-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Type</th>
+              <th>Key (`key`)</th>
+              <th>Code (`code`)</th>
+              <th>Which / KeyCode</th>
+              <th>Location</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="eventLogBody">
+            <tr class="empty-state">
+              <td colspan="7">Press any key on your keyboard to begin testing...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>Keyboard Tester • Standalone HTML/CSS/JS Diagnostic Suite • Ready for collaborative enhancement</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
