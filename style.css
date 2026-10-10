@@ -357,6 +357,35 @@ body {
   color: var(--text-main);
 }
 
+/* Acoustic Oscilloscope Visualizer */
+.visualizer-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.visualizer-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+#audioVisualizer {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: #090e17;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
 .layout-toggle-group {
   display: flex;
   align-items: center;

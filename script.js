@@ -81,6 +81,7 @@ let currentTotalTestableKeys = keyMap.size;
 
 // Web Audio API Synth for Mechanical Key Click
 let audioCtx = null;
+let analyserNode = null;
 
 function playKeySound(isKeyDown = true) {
   if (!soundEnabled) return;
@@ -97,10 +98,17 @@ function playKeySound(isKeyDown = true) {
       audioCtx = new AudioContextClass();
     }
 
+    if (!analyserNode && audioCtx) {
+      analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 128;
+      analyserNode.connect(audioCtx.destination);
+    }
+
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
 
+    const audioTarget = analyserNode || audioCtx.destination;
     const now = audioCtx.currentTime;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -114,7 +122,7 @@ function playKeySound(isKeyDown = true) {
         gain.gain.setValueAtTime(0.22 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(audioTarget);
         osc.start(now);
         osc.stop(now + 0.04);
       } else {
@@ -124,7 +132,7 @@ function playKeySound(isKeyDown = true) {
         gain.gain.setValueAtTime(0.09 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(audioTarget);
         osc.start(now);
         osc.stop(now + 0.028);
       }
@@ -137,7 +145,7 @@ function playKeySound(isKeyDown = true) {
         gain.gain.setValueAtTime(0.25 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(audioTarget);
         osc.start(now);
         osc.stop(now + 0.065);
       } else {
@@ -147,7 +155,7 @@ function playKeySound(isKeyDown = true) {
         gain.gain.setValueAtTime(0.07 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(audioTarget);
         osc.start(now);
         osc.stop(now + 0.035);
       }
@@ -160,7 +168,7 @@ function playKeySound(isKeyDown = true) {
         gain.gain.setValueAtTime(0.19 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(audioTarget);
         osc.start(now);
         osc.stop(now + 0.05);
       } else {
@@ -170,7 +178,7 @@ function playKeySound(isKeyDown = true) {
         gain.gain.setValueAtTime(0.08 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.032);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(audioTarget);
         osc.start(now);
         osc.stop(now + 0.032);
       }
