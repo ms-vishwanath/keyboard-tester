@@ -34,6 +34,35 @@
         <button id="soundToggleBtn" class="pill-btn active" title="Toggle mechanical switch click audio">
           <span class="icon">🔊</span> Sound: ON
         </button>
+        <div class="audio-tuning-wrapper">
+          <button id="audioSettingsBtn" class="pill-btn" title="Tune mechanical switch audio volume and pitch">
+            <span class="icon">🎛️</span> Audio Settings
+          </button>
+          <div class="audio-tuning-dropdown" id="audioTuningDropdown" style="display: none;">
+            <div class="audio-tuning-header">
+              <span class="audio-tuning-title">🎛️ Switch Audio Tuning</span>
+              <button id="closeAudioSettingsBtn" class="icon-close-btn" title="Close settings">✕</button>
+            </div>
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <label for="volumeSlider">Volume</label>
+                <span id="volumeValue" class="slider-val">100%</span>
+              </div>
+              <input type="range" id="volumeSlider" class="custom-range" min="0" max="100" step="1" value="100" />
+            </div>
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <label for="pitchSlider">Pitch Multiplier</label>
+                <span id="pitchValue" class="slider-val">1.00x</span>
+              </div>
+              <input type="range" id="pitchSlider" class="custom-range" min="0.5" max="2.0" step="0.05" value="1.0" />
+            </div>
+            <div class="audio-tuning-footer">
+              <button id="testAudioBtn" class="pill-btn-sm" title="Preview current switch sound">▶ Test Sound</button>
+              <button id="resetAudioBtn" class="pill-btn-sm secondary" title="Reset volume and pitch to defaults">Reset</button>
+            </div>
+          </div>
+        </div>
         <button id="exportBtn" class="pill-btn" title="Export diagnostic test report">
           <span class="icon">📥</span> Export JSON
         </button>
@@ -98,7 +127,13 @@
           <button class="pill-btn layout-btn active" data-layout="100">100% Full</button>
           <button class="pill-btn layout-btn" data-layout="tkl">80% TKL</button>
           <button class="pill-btn layout-btn" data-layout="75">75% Compact</button>
+          <button class="pill-btn layout-btn" data-layout="65">65% Compact</button>
           <button class="pill-btn layout-btn" data-layout="60">60% Minimal</button>
+        </div>
+        <div class="variant-toggle-group" id="variantToggleGroup">
+          <span class="toolbar-label">Enter:</span>
+          <button class="pill-btn variant-btn active" data-variant="ansi" title="ANSI wide horizontal Enter">ANSI</button>
+          <button class="pill-btn variant-btn" data-variant="iso" title="ISO tall inverted-L Enter">ISO</button>
         </div>
         <button id="heatmapToggleBtn" class="pill-btn" title="Toggle key actuation frequency heatmap mode">🔥 Heatmap: OFF</button>
         <label class="toggle-checkbox">
@@ -165,7 +200,7 @@
           </div>
 
           <!-- QWERTY Row -->
-          <div class="key-row">
+          <div class="key-row row-qwerty">
             <div class="key key-tab" data-code="Tab"><span class="key-label">Tab</span></div>
             <div class="key" data-code="KeyQ"><span class="key-label">Q</span></div>
             <div class="key" data-code="KeyW"><span class="key-label">W</span></div>
@@ -179,11 +214,11 @@
             <div class="key" data-code="KeyP"><span class="key-label">P</span></div>
             <div class="key" data-code="BracketLeft"><span class="key-label-sub">{</span><span class="key-label">[</span></div>
             <div class="key" data-code="BracketRight"><span class="key-label-sub">}</span><span class="key-label">]</span></div>
-            <div class="key key-backslash" data-code="Backslash"><span class="key-label-sub">|</span><span class="key-label">\</span></div>
+            <div class="key key-backslash key-ansi-only" data-code="Backslash"><span class="key-label-sub">|</span><span class="key-label">\</span></div>
           </div>
 
           <!-- ASDF Row -->
-          <div class="key-row">
+          <div class="key-row row-home">
             <div class="key key-caps" data-code="CapsLock"><span class="key-label">Caps Lock</span></div>
             <div class="key" data-code="KeyA"><span class="key-label">A</span></div>
             <div class="key" data-code="KeyS"><span class="key-label">S</span></div>
@@ -196,12 +231,14 @@
             <div class="key" data-code="KeyL"><span class="key-label">L</span></div>
             <div class="key" data-code="Semicolon"><span class="key-label-sub">:</span><span class="key-label">;</span></div>
             <div class="key" data-code="Quote"><span class="key-label-sub">"</span><span class="key-label">'</span></div>
+            <div class="key key-intl-hash key-iso-only" data-code="IntlHash"><span class="key-label-sub">~</span><span class="key-label">#</span></div>
             <div class="key key-enter" data-code="Enter"><span class="key-label">Enter</span></div>
           </div>
 
           <!-- ZXCV Row -->
-          <div class="key-row">
+          <div class="key-row row-zxcv">
             <div class="key key-lshift" data-code="ShiftLeft"><span class="key-label">Shift</span></div>
+            <div class="key key-intl-backslash key-iso-only" data-code="IntlBackslash"><span class="key-label-sub">|</span><span class="key-label">\</span></div>
             <div class="key" data-code="KeyZ"><span class="key-label">Z</span></div>
             <div class="key" data-code="KeyX"><span class="key-label">X</span></div>
             <div class="key" data-code="KeyC"><span class="key-label">C</span></div>

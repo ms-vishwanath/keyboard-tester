@@ -11,6 +11,8 @@ let eventCounter = 0;
 let soundEnabled = true;
 let currentOS = 'mac'; // 'mac' | 'win'
 let currentSoundProfile = 'blue'; // 'blue' | 'red' | 'brown'
+let soundVolume = 1.0; // 0.0 - 1.0 (0% - 100%)
+let soundPitch = 1.0; // 0.5 - 2.0 (0.5x - 2.0x)
 let currentLayout = '100'; // '100' | 'tkl' | '75' | '65' | '60'
 let currentVariant = 'ansi'; // 'ansi' | 'iso'
 let chatterCount = 0;
@@ -51,6 +53,15 @@ const soundProfileSelect = document.getElementById('soundProfileSelect');
 const layoutBtns = document.querySelectorAll('.layout-btn');
 const variantBtns = document.querySelectorAll('.variant-btn');
 const soundToggleBtn = document.getElementById('soundToggleBtn');
+const audioSettingsBtn = document.getElementById('audioSettingsBtn');
+const audioTuningDropdown = document.getElementById('audioTuningDropdown');
+const closeAudioSettingsBtn = document.getElementById('closeAudioSettingsBtn');
+const volumeSlider = document.getElementById('volumeSlider');
+const volumeValue = document.getElementById('volumeValue');
+const pitchSlider = document.getElementById('pitchSlider');
+const pitchValue = document.getElementById('pitchValue');
+const testAudioBtn = document.getElementById('testAudioBtn');
+const resetAudioBtn = document.getElementById('resetAudioBtn');
 const heatmapToggleBtn = document.getElementById('heatmapToggleBtn');
 const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
@@ -74,6 +85,11 @@ let audioCtx = null;
 function playKeySound(isKeyDown = true) {
   if (!soundEnabled) return;
 
+  const vol = Math.max(0, Math.min(1, soundVolume));
+  if (vol === 0) return;
+
+  const pitch = Math.max(0.1, soundPitch);
+
   try {
     if (!audioCtx) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -93,9 +109,9 @@ function playKeySound(isKeyDown = true) {
       // Cherry MX Blue (Clicky: sharp high pitch crisp snap)
       if (isKeyDown) {
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(820, now);
-        osc.frequency.exponentialRampToValueAtTime(160, now + 0.035);
-        gain.gain.setValueAtTime(0.22, now);
+        osc.frequency.setValueAtTime(820 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, 160 * pitch), now + 0.035);
+        gain.gain.setValueAtTime(0.22 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -103,9 +119,9 @@ function playKeySound(isKeyDown = true) {
         osc.stop(now + 0.04);
       } else {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(380, now);
-        osc.frequency.exponentialRampToValueAtTime(110, now + 0.025);
-        gain.gain.setValueAtTime(0.09, now);
+        osc.frequency.setValueAtTime(380 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, 110 * pitch), now + 0.025);
+        gain.gain.setValueAtTime(0.09 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -116,9 +132,9 @@ function playKeySound(isKeyDown = true) {
       // Cherry MX Red (Linear: deep, muted, thocky low-frequency bottom-out)
       if (isKeyDown) {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(190, now);
-        osc.frequency.exponentialRampToValueAtTime(55, now + 0.06);
-        gain.gain.setValueAtTime(0.25, now);
+        osc.frequency.setValueAtTime(190 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, 55 * pitch), now + 0.06);
+        gain.gain.setValueAtTime(0.25 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -126,9 +142,9 @@ function playKeySound(isKeyDown = true) {
         osc.stop(now + 0.065);
       } else {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(130, now);
-        osc.frequency.exponentialRampToValueAtTime(50, now + 0.03);
-        gain.gain.setValueAtTime(0.07, now);
+        osc.frequency.setValueAtTime(130 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, 50 * pitch), now + 0.03);
+        gain.gain.setValueAtTime(0.07 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -139,9 +155,9 @@ function playKeySound(isKeyDown = true) {
       // Cherry MX Brown (Tactile: balanced mid-range bump)
       if (isKeyDown) {
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(460, now);
-        osc.frequency.exponentialRampToValueAtTime(110, now + 0.045);
-        gain.gain.setValueAtTime(0.19, now);
+        osc.frequency.setValueAtTime(460 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, 110 * pitch), now + 0.045);
+        gain.gain.setValueAtTime(0.19 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -149,9 +165,9 @@ function playKeySound(isKeyDown = true) {
         osc.stop(now + 0.05);
       } else {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(260, now);
-        osc.frequency.exponentialRampToValueAtTime(80, now + 0.03);
-        gain.gain.setValueAtTime(0.08, now);
+        osc.frequency.setValueAtTime(260 * pitch, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, 80 * pitch), now + 0.03);
+        gain.gain.setValueAtTime(0.08 * vol, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.032);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -471,10 +487,16 @@ function exportReport() {
 
   const report = {
     application: "Keyboard Tester",
-    version: "1.4.0",
+    version: "1.5.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
     soundProfile: currentSoundProfile,
+    audioSettings: {
+      soundEnabled: soundEnabled,
+      soundProfile: currentSoundProfile,
+      volumePercent: Math.round(soundVolume * 100),
+      pitchMultiplier: Number(soundPitch.toFixed(2))
+    },
     layout: currentLayout,
     enterVariant: currentVariant,
     heatmapModeActive: heatmapMode,
@@ -552,6 +574,11 @@ function setVariant(variant) {
     btn.classList.toggle('active', btn.getAttribute('data-variant') === variant);
   });
   keyboardEl.classList.toggle('variant-iso', variant === 'iso');
+
+  // The variant swaps which keys are present, so recalculate the testable total
+  requestAnimationFrame(() => {
+    calculateVisibleTestableKeys();
+  });
 }
 
 variantBtns.forEach(btn => {
@@ -632,6 +659,66 @@ soundToggleBtn.addEventListener('click', () => {
   } else {
     soundToggleBtn.classList.remove('active');
     soundToggleBtn.innerHTML = '<span class="icon">🔇</span> Sound: OFF';
+  }
+});
+
+// Audio Tuning Controls
+if (volumeSlider) {
+  volumeSlider.addEventListener('input', (e) => {
+    soundVolume = parseFloat(e.target.value) / 100;
+    if (volumeValue) volumeValue.textContent = `${e.target.value}%`;
+  });
+}
+
+if (pitchSlider) {
+  pitchSlider.addEventListener('input', (e) => {
+    soundPitch = parseFloat(e.target.value);
+    if (pitchValue) pitchValue.textContent = `${soundPitch.toFixed(2)}x`;
+  });
+}
+
+if (testAudioBtn) {
+  testAudioBtn.addEventListener('click', () => {
+    playKeySound(true);
+    setTimeout(() => playKeySound(false), 90);
+  });
+}
+
+if (resetAudioBtn) {
+  resetAudioBtn.addEventListener('click', () => {
+    soundVolume = 1.0;
+    soundPitch = 1.0;
+    if (volumeSlider) volumeSlider.value = 100;
+    if (volumeValue) volumeValue.textContent = '100%';
+    if (pitchSlider) pitchSlider.value = 1.0;
+    if (pitchValue) pitchValue.textContent = '1.00x';
+  });
+}
+
+if (audioSettingsBtn && audioTuningDropdown) {
+  audioSettingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = audioTuningDropdown.style.display === 'none';
+    audioTuningDropdown.style.display = isHidden ? 'flex' : 'none';
+    audioSettingsBtn.classList.toggle('active', isHidden);
+  });
+}
+
+if (closeAudioSettingsBtn && audioTuningDropdown) {
+  closeAudioSettingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    audioTuningDropdown.style.display = 'none';
+    if (audioSettingsBtn) audioSettingsBtn.classList.remove('active');
+  });
+}
+
+// Close audio dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (audioTuningDropdown && audioTuningDropdown.style.display !== 'none') {
+    if (!audioTuningDropdown.contains(e.target) && e.target !== audioSettingsBtn && !audioSettingsBtn.contains(e.target)) {
+      audioTuningDropdown.style.display = 'none';
+      if (audioSettingsBtn) audioSettingsBtn.classList.remove('active');
+    }
   }
 });
 

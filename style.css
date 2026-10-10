@@ -181,6 +181,182 @@ body {
   box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
 }
 
+/* Audio Tuning Controls */
+.audio-tuning-wrapper {
+  position: relative;
+}
+
+.audio-tuning-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 290px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.8), 0 0 16px rgba(56, 189, 248, 0.15);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.audio-tuning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.audio-tuning-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.icon-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.icon-close-btn:hover {
+  background: var(--bg-card-subtle);
+  color: var(--text-main);
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.slider-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 0.82rem;
+}
+
+/* Custom Range Sliders */
+.custom-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-range:hover {
+  border-color: var(--accent);
+}
+
+.custom-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+.custom-range::-webkit-slider-thumb:hover,
+.custom-range::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+  background: #7dd3fc;
+}
+
+.custom-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+.custom-range::-moz-range-thumb:hover,
+.custom-range::-moz-range-thumb:active {
+  transform: scale(1.2);
+  background: #7dd3fc;
+}
+
+.audio-tuning-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  gap: 8px;
+}
+
+.pill-btn-sm {
+  background: #1e3a8a;
+  color: #bae6fd;
+  border: 1px solid var(--accent);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pill-btn-sm:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.pill-btn-sm.secondary {
+  background: var(--bg-card-subtle);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+.pill-btn-sm.secondary:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
 .layout-toggle-group {
   display: flex;
   align-items: center;
@@ -419,31 +595,57 @@ body {
 }
 
 /* 65% Compact Layout */
+/* Alphabetic block + modifiers + arrows + compact nav/edit column.
+   Drops the numpad and the separate function-row clusters. */
 .keyboard.layout-65 .keyboard-numpad {
   display: none;
 }
 .keyboard.layout-65 .f-row {
   display: none;
 }
-.keyboard.layout-65 .keyboard-nav .f-row,
-.keyboard.layout-65 .keyboard-nav .empty-row,
-.keyboard.layout-65 .keyboard-nav .key[data-code="Insert"],
-.keyboard.layout-65 .keyboard-nav .key[data-code="Home"],
-.keyboard.layout-65 .keyboard-nav .key[data-code="End"] {
+.keyboard.layout-65 .keyboard-nav .f-row {
   display: none;
 }
 
-/* ISO Enter Variant */
+/* ISO Enter Variant (102-key physical layout) */
+/* Per the UI Events spec, ISO omits the ANSI "Backslash" key and adds
+   "IntlBackslash" (next to left Shift) and "IntlHash" (left of Enter). */
+.key.key-iso-only {
+  display: none;
+}
+
+.keyboard.variant-iso .key.key-iso-only {
+  display: flex;
+}
+
+.keyboard.variant-iso .key.key-ansi-only {
+  display: none;
+}
+
+/* Tall L-shaped Enter spanning the home row and wrapping over the row below */
+.keyboard.variant-iso .row-home {
+  position: relative;
+}
+
 .keyboard.variant-iso .key-enter {
-  width: 82px;
+  width: 62px;
   height: 106px;
   position: absolute;
   right: 0;
+  top: 0;
   z-index: 3;
+  justify-content: flex-start;
+  padding-top: 8px;
 }
-.keyboard.variant-iso .key-backslash {
-  position: relative;
-  right: 88px;
+
+/* ISO left Shift is shorter to make room for the IntlBackslash key */
+.keyboard.variant-iso .key-lshift {
+  width: 62px;
+}
+
+/* Reclaim the space the removed ANSI Backslash key frees up */
+.keyboard.variant-iso .row-qwerty .key-tab {
+  width: 88px;
 }
 
 .keyboard-main,
