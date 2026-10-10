@@ -188,6 +188,62 @@ function playKeySound(isKeyDown = true) {
   }
 }
 
+// Acoustic Oscilloscope Visualizer Renderer
+const visualizerCanvas = document.getElementById('audioVisualizer');
+const visualizerCtx = visualizerCanvas ? visualizerCanvas.getContext('2d') : null;
+
+function drawOscilloscope() {
+  requestAnimationFrame(drawOscilloscope);
+  if (!visualizerCanvas || !visualizerCtx) return;
+
+  const width = visualizerCanvas.width;
+  const height = visualizerCanvas.height;
+
+  visualizerCtx.fillStyle = '#090e17';
+  visualizerCtx.fillRect(0, 0, width, height);
+
+  if (!analyserNode) {
+    // Subtle ambient baseline
+    visualizerCtx.lineWidth = 1.5;
+    visualizerCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    visualizerCtx.beginPath();
+    visualizerCtx.moveTo(0, height / 2);
+    visualizerCtx.lineTo(width, height / 2);
+    visualizerCtx.stroke();
+    return;
+  }
+
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  analyserNode.getByteTimeDomainData(dataArray);
+
+  visualizerCtx.lineWidth = 2;
+  visualizerCtx.strokeStyle = '#38bdf8';
+  visualizerCtx.shadowBlur = 6;
+  visualizerCtx.shadowColor = '#38bdf8';
+
+  visualizerCtx.beginPath();
+  const sliceWidth = width / bufferLength;
+  let x = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const v = dataArray[i] / 128.0;
+    const y = (v * height) / 2;
+    if (i === 0) {
+      visualizerCtx.moveTo(x, y);
+    } else {
+      visualizerCtx.lineTo(x, y);
+    }
+    x += sliceWidth;
+  }
+
+  visualizerCtx.lineTo(width, height / 2);
+  visualizerCtx.stroke();
+  visualizerCtx.shadowBlur = 0;
+}
+
+requestAnimationFrame(drawOscilloscope);
+
 // Location formatter
 function formatLocation(loc) {
   switch (loc) {
