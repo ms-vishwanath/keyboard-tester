@@ -94,16 +94,24 @@
           <button class="pill-btn layout-btn" data-layout="75">75% Compact</button>
           <button class="pill-btn layout-btn" data-layout="60">60% Minimal</button>
         </div>
+        <button id="heatmapToggleBtn" class="pill-btn" title="Toggle key actuation frequency heatmap mode">🔥 Heatmap: OFF</button>
         <label class="toggle-checkbox">
           <input type="checkbox" id="preventShortcutsCheckbox" checked />
           <span class="checkmark"></span>
           <span>Prevent browser shortcuts</span>
         </label>
       </div>
-      <div class="status-legend">
+      <div class="status-legend" id="standardLegend">
         <span class="legend-item"><span class="dot active-dot"></span> Active (Pressed)</span>
         <span class="legend-item"><span class="dot tested-dot"></span> Tested (Working)</span>
         <span class="legend-item"><span class="dot untouched-dot"></span> Untested</span>
+      </div>
+      <div class="status-legend heatmap-legend" id="heatmapLegend" style="display: none;">
+        <span class="legend-item"><span class="dot heatmap-dot-1"></span> L1 (Cyan)</span>
+        <span class="legend-item"><span class="dot heatmap-dot-2"></span> L2 (Lime)</span>
+        <span class="legend-item"><span class="dot heatmap-dot-3"></span> L3 (Yellow)</span>
+        <span class="legend-item"><span class="dot heatmap-dot-4"></span> L4 (Orange)</span>
+        <span class="legend-item"><span class="dot heatmap-dot-5"></span> L5 (Hot Pink)</span>
       </div>
     </div>
 

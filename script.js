@@ -13,6 +13,8 @@ let currentOS = 'mac'; // 'mac' | 'win'
 let currentSoundProfile = 'blue'; // 'blue' | 'red' | 'brown'
 let currentLayout = '100'; // '100' | 'tkl' | '75' | '60'
 let chatterCount = 0;
+let heatmapMode = false;
+const keyPressFrequencyMap = new Map();
 const lastKeyDownTimeMap = new Map();
 const holdDurations = [];
 
@@ -42,8 +44,11 @@ const osWinBtn = document.getElementById('osWinBtn');
 const soundProfileSelect = document.getElementById('soundProfileSelect');
 const layoutBtns = document.querySelectorAll('.layout-btn');
 const soundToggleBtn = document.getElementById('soundToggleBtn');
+const heatmapToggleBtn = document.getElementById('heatmapToggleBtn');
 const exportBtn = document.getElementById('exportBtn');
 const resetBtn = document.getElementById('resetBtn');
+const standardLegend = document.getElementById('standardLegend');
+const heatmapLegend = document.getElementById('heatmapLegend');
 
 // Key code mapping cache
 const keyMap = new Map();
@@ -239,6 +244,79 @@ function shouldPreventShortcut(event) {
   return false;
 }
 
+// Heatmap & Press Frequency Mode
+const HEATMAP_CLASSES = [
+  'heatmap-1', 'heatmap-2', 'heatmap-3', 'heatmap-4', 'heatmap-5',
+  'heatmap-level-1', 'heatmap-level-2', 'heatmap-level-3', 'heatmap-level-4', 'heatmap-level-5'
+];
+
+function getHeatmapLevel(count, maxCount) {
+  if (count <= 0) return 0;
+  if (maxCount <= 1) return 1;
+  const ratio = count / maxCount;
+  if (ratio <= 0.2) return 1;
+  if (ratio <= 0.4) return 2;
+  if (ratio <= 0.6) return 3;
+  if (ratio <= 0.8) return 4;
+  return 5;
+}
+
+function updateHeatmapDisplay() {
+  if (!heatmapMode) return;
+
+  let maxCount = 0;
+  keyPressFrequencyMap.forEach(count => {
+    if (count > maxCount) maxCount = count;
+  });
+
+  keyMap.forEach((el, code) => {
+    HEATMAP_CLASSES.forEach(cls => el.classList.remove(cls));
+
+    const count = keyPressFrequencyMap.get(code) || 0;
+    if (count > 0) {
+      const level = getHeatmapLevel(count, maxCount);
+      el.classList.add(`heatmap-${level}`);
+      el.setAttribute('title', `${code}: ${count} press${count === 1 ? '' : 'es'}`);
+    } else {
+      el.removeAttribute('title');
+    }
+  });
+}
+
+function clearHeatmapDisplay() {
+  keyMap.forEach((el) => {
+    HEATMAP_CLASSES.forEach(cls => el.classList.remove(cls));
+    el.removeAttribute('title');
+  });
+}
+
+function toggleHeatmapMode() {
+  heatmapMode = !heatmapMode;
+  if (heatmapMode) {
+    if (heatmapToggleBtn) {
+      heatmapToggleBtn.classList.add('active');
+      heatmapToggleBtn.textContent = '🔥 Heatmap: ON';
+    }
+    if (keyboardEl) keyboardEl.classList.add('heatmap-mode');
+    if (standardLegend && heatmapLegend) {
+      standardLegend.style.display = 'none';
+      heatmapLegend.style.display = 'flex';
+    }
+    updateHeatmapDisplay();
+  } else {
+    if (heatmapToggleBtn) {
+      heatmapToggleBtn.classList.remove('active');
+      heatmapToggleBtn.textContent = '🔥 Heatmap: OFF';
+    }
+    if (keyboardEl) keyboardEl.classList.remove('heatmap-mode');
+    if (standardLegend && heatmapLegend) {
+      standardLegend.style.display = 'flex';
+      heatmapLegend.style.display = 'none';
+    }
+    clearHeatmapDisplay();
+  }
+}
+
 // Handle Key Down
 window.addEventListener('keydown', (e) => {
   if (shouldPreventShortcut(e)) {
@@ -259,6 +337,10 @@ window.addEventListener('keydown', (e) => {
   }
   lastKeyDownTimeMap.set(code, now);
 
+  // Press Frequency Tracking
+  const pressCount = (keyPressFrequencyMap.get(code) || 0) + 1;
+  keyPressFrequencyMap.set(code, pressCount);
+
   activeKeys.add(code);
   testedKeys.add(code);
 
@@ -273,6 +355,10 @@ window.addEventListener('keydown', (e) => {
   lastWhichValueEl.textContent = `${e.which || e.keyCode || '—'}`;
   keyLocationValueEl.textContent = `Location: ${formatLocation(e.location)}`;
   activeKeysCountEl.textContent = activeKeys.size;
+
+  if (heatmapMode) {
+    updateHeatmapDisplay();
+  }
 
   // Update visual key
   const keyEl = keyMap.get(code);
@@ -327,6 +413,7 @@ window.addEventListener('blur', () => {
 function resetAll() {
   activeKeys.clear();
   testedKeys.clear();
+  keyPressFrequencyMap.clear();
   maxRollover = 0;
   eventCounter = 0;
   chatterCount = 0;
@@ -335,6 +422,8 @@ function resetAll() {
 
   keyElements.forEach(el => {
     el.classList.remove('active', 'tested');
+    HEATMAP_CLASSES.forEach(cls => el.classList.remove(cls));
+    el.removeAttribute('title');
   });
 
   lastKeyValueEl.textContent = '—';
@@ -365,13 +454,16 @@ resetBtn.addEventListener('click', resetAll);
 // Export Diagnostic Report
 function exportReport() {
   const avgHold = holdDurations.length ? Math.round(holdDurations.reduce((a, b) => a + b, 0) / holdDurations.length) : 0;
+  const totalActuations = Array.from(keyPressFrequencyMap.values()).reduce((a, b) => a + b, 0);
+
   const report = {
     application: "Keyboard Tester",
-    version: "1.2.0",
+    version: "1.3.0",
     exportTime: new Date().toISOString(),
     osTarget: currentOS,
     soundProfile: currentSoundProfile,
     layout: currentLayout,
+    heatmapModeActive: heatmapMode,
     summary: {
       testedKeysCount: testedKeys.size,
       totalKeysAvailable: currentTotalTestableKeys,
@@ -379,7 +471,14 @@ function exportReport() {
       maxRolloverKeys: maxRollover,
       chatterBounceAlerts: chatterCount,
       averageHoldDurationMs: avgHold,
-      totalEventsRecorded: eventCounter
+      totalEventsRecorded: eventCounter,
+      totalKeyActuations: totalActuations
+    },
+    heatmap: {
+      modeActive: heatmapMode,
+      totalUniqueKeysActuated: keyPressFrequencyMap.size,
+      totalActuations: totalActuations,
+      frequencyMap: Object.fromEntries(keyPressFrequencyMap)
     },
     testedKeys: Array.from(testedKeys)
   };
@@ -473,6 +572,11 @@ soundToggleBtn.addEventListener('click', () => {
     soundToggleBtn.innerHTML = '<span class="icon">🔇</span> Sound: OFF';
   }
 });
+
+// Heatmap Toggle
+if (heatmapToggleBtn) {
+  heatmapToggleBtn.addEventListener('click', toggleHeatmapMode);
+}
 
 // Auto-focus keyboard wrapper on click so user is immediately ready
 keyboardWrapper.addEventListener('click', () => {
